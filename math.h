@@ -6,14 +6,17 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef struct
-{
-    int dim;
-    float * data;
-} vector;
 
+/*
+///////////////////////////////////////
 
+MATRIX AND VECTOR DEFINITIONS AND OPERATIONS
 
+A matrix has (rows, cols) dimensions.
+A vector has (rows, 1) dimensions.
+
+///////////////////////////////////////
+*/
 typedef struct 
 {
   int rows;
@@ -235,7 +238,7 @@ int dotProductMatrix(matrix * v1, matrix * v2, float * prod)
   return 0;
 }
 
-int identity(matrix * m)
+int identityMatrix(matrix * m)
 {
   if (!m || m->rows != m->cols) return -1;
   int row, col;
@@ -278,7 +281,7 @@ int isMatrixUpperTriangular(matrix * mtx)
   return 1;
 }
 
-int diagonal(matrix * v, matrix * mtx)
+int diagonalMatrix(matrix * v, matrix * mtx)
 {
   if (!v || !mtx ||
       v->cols > 1 || v->rows != mtx->rows ||

@@ -1,6 +1,6 @@
 SRC = testMath.c
 OBJ = $(SRC:.c=.o)
-BIN ?= ./build
+BIN = ./testMath
 CFLAGS = -Wall -O2
 
 all: $(BIN)

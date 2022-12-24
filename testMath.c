@@ -79,11 +79,11 @@ int main() {
          isMatrixDiagonal(A),
          isMatrixDiagonal(B));
 
-  identity(A);
+  identityMatrix(A);
   printf("\nIdentity:\n");
   printMatrix(A);
 
-  diagonal(c, A);
+  diagonalMatrix(c, A);
   printf("\nDiagonal from c:\n");
   printMatrix(A);
 
