@@ -1,6 +1,13 @@
 #ifndef PHYSICS_H_
 #define PHYICS_H_
 
+/**
+ * @author  Burak Yueksel
+ * @date    24 December 2022
+ * @brief   Physics libraries
+ * @addtogroup PHYSICS
+ **/
+
 #include "math.h"
 
 typedef struct {

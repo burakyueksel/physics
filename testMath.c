@@ -1,3 +1,10 @@
+/**
+ * @author  Burak Yueksel
+ * @date    24 December 2022
+ * @brief   Test math library functions
+ * @addtogroup MATH
+ **/
+
 #include <stdio.h>
 #include <string.h>
 #include "math.h"

@@ -1,6 +1,13 @@
 #ifndef MATH_H_
 #define MATH_H_
 
+/**
+ * @author  Burak Yueksel
+ * @date    24 December 2022
+ * @brief   Math libraries for physics
+ * @addtogroup MATH
+ **/
+
 #define NULL ((void *)0)
 
 #include <assert.h>
