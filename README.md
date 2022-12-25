@@ -21,5 +21,5 @@ make
 * Test
 
 ```sh
-./testMath
+./physics
 ```
