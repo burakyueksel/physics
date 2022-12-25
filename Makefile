@@ -1,17 +1,20 @@
-SRC_DIR := src
-OBJ_DIR := obj
-BIN_DIR := build
-TEST_DIR:= tests
+SRC_DIR		:= src
+OBJ_DIR		:= obj
+BIN_DIR		:= build
+TEST_DIR	:= tests
+LIB_DIR		:= include
 
-EXE := $(BIN_DIR)/testMath
-SRC := $(wildcard $(SRC_DIR)/*.c)
+
+EXE			:= $(BIN_DIR)/main
+SRC			:= $(wildcard $(SRC_DIR)/*.c)
 #SRC	:= $(SRC_DIR)/testMath.c
-OBJ := $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+OBJ			:= $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+LIB_PATH	:= -I$(LIB_DIR)
 
-CPPFLAGS := -Iinclude -MMD -MP
-CFLAGS   := -Wall
-LDFLAGS  := -Llib
-LDLIBS   := -lm
+CFLAGS		:= -Wall -O2
+CFLAGS 		:= -c -Wall $(LIB_PATH)
+LDFLAGS		:= -Llib
+LDLIBS 		:= -lm
 
 .PHONY: all clean
 

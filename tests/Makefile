@@ -1,4 +1,4 @@
-LIBS	:= -I../include
+LIBS	:= -I"../include"
 SRC = testMath.c
 OBJ = $(SRC:.c=.o)
 BIN = ./testMath
