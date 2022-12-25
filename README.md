@@ -18,7 +18,13 @@ make clean
 make
 ```
 
-* Test
+* Tests
+
+```sh
+make test
+```
+
+* Run
 
 ```sh
 ./physics
