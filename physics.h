@@ -11,9 +11,10 @@
 #include "math.h"
 
 typedef struct {
-  float mass;
-  matrix momentOfInertia;
-} rigidBody_mass_inertia;
+  float mass_kg;
+  matrix * I_kgm2;
+  float dragCoeff;
+} pointObject;
 
 
 
