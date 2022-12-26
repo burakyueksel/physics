@@ -32,6 +32,13 @@ typedef struct
   quaternion q;
 } rotationalStates;
 
+typedef struct
+{
+  translationalStates trState;
+  rotationalStates rtState;
+} states;
+
+
 
 /*
 ********************************************
@@ -40,6 +47,13 @@ typedef struct
 */
 extern pointObject g_physicsPointObj;
 
+extern states g_phsicsPointStates;
+
+/*
+********************************************
+** FUNCTIONS
+********************************************
+*/
 extern void physicsMain();
 extern void physicsInit();
 
