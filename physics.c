@@ -12,6 +12,9 @@
 /*define a particle as a point object*/
 pointObject g_physicsPointObj;
 
+/*define its states*/
+states g_phsicsPointStates;
+
 /** @brief Main  Physics Function */
 void physicsMain()
 {
@@ -32,6 +35,7 @@ void physicsMain()
 /** @brief Initialize Physics */
 void physicsInit()
 {
+    /* SET PARAMETERS*/
     /*define its mass*/
     g_physicsPointObj.mass_kg    = POINT_MASS_KG;
     /*define its drag coeff*/
@@ -48,4 +52,8 @@ void physicsInit()
     setMatrixElement(g_physicsPointObj.I_kgm2, 3, 1, POINT_I_XZ_KGM2);//IZX=IXZ
     setMatrixElement(g_physicsPointObj.I_kgm2, 2, 3, POINT_I_YZ_KGM2);//IYZ
     setMatrixElement(g_physicsPointObj.I_kgm2, 3, 2, POINT_I_YZ_KGM2);//IZY=IYZ
+
+    /* SET STATES */
+    // all initial states are zero
+    memset(&g_phsicsPointStates, 0, sizeof(g_phsicsPointStates));
 }
