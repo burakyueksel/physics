@@ -10,12 +10,38 @@
 
 #include "math.h"
 
-typedef struct {
+typedef struct
+{
   float mass_kg;
   matrix * I_kgm2;
   float dragCoeff;
 } pointObject;
 
+typedef struct
+{
+  vector3 accInertial_mps2;
+  vector3 velInertial_mps;
+  vector3 pos_Inertial_m;
+} translationalStates;
+
+typedef struct
+{
+  vector3 rotAccBody_rps2;
+  vector3 rotVelBody_rps;
+  vector3 euler_r;
+  quaternion q;
+} rotationalStates;
+
+
+/*
+********************************************
+** GLOBALS
+********************************************
+*/
+extern pointObject g_physicsPointObj;
+
+extern void physicsMain();
+extern void physicsInit();
 
 
 #endif // PHYSICS_H_

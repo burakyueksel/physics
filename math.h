@@ -16,6 +16,13 @@
 #include <stdio.h>
 
 
+typedef float vector;
+typedef vector vector2[2];
+typedef vector vector3[3];
+typedef vector vector4[4];
+
+typedef vector4 quaternion;
+
 /*
 ///////////////////////////////////////
 
@@ -23,6 +30,8 @@ MATRIX AND VECTOR DEFINITIONS AND OPERATIONS
 
 A matrix has (rows, cols) dimensions.
 A vector has (rows, 1) dimensions.
+
+Source: http://theory.stanford.edu/~arbrad/pfe/06/matrix.c
 
 ///////////////////////////////////////
 */

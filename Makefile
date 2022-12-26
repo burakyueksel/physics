@@ -1,8 +1,8 @@
 TEST_DIR := tests
 
-SRC = physics.c
+SRC = main.c
 OBJ = $(SRC:.c=.o)
-BIN = ./physics
+BIN = ./main
 CFLAGS = -Wall -O2
 
 all: $(BIN)
