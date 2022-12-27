@@ -8,7 +8,7 @@ CFLAGS = -Wall -O2
 LDFLAGS=
 
 # Source files
-SRCS= main.c physics.c
+SRCS= $(wildcard *.c)
 
 # Object files
 OBJFILES = $(SRCS:.c=.o)
