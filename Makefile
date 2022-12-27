@@ -1,22 +1,28 @@
 TEST_DIR := tests
 
-SRC = main.c
-OBJ = $(SRC:.c=.o)
-BIN = ./main
+CC = gcc
+OBJFILES = main.o physics.o
+TARGET = ./main
 CFLAGS = -Wall -O2
+LDFLAGS=
 
-all: $(BIN)
+all: $(TARGET)
 
-$(BIN): $(OBJ)
-	gcc $^ $(CFLAGS) -o $@
+# We use the following example:
+#./main: main.o
+#	gcc main.o -o ./main
+# which generates ./main instead of a.out when running gcc
+$(TARGET): $(OBJFILES)
+	$(CC) $(CFLAGS) $(OBJFILES) -o $(TARGET) $(LDFLAGS)
 
-%.o: %.c
-	gcc -c $^ $(CFLAGS) -o $@
+.PHONY: clean
 
 clean:
-	$(RM) -r $(BIN)
+	rm -f $(OBJFILES) $(TARGET) *~
 	$(RM) -r *.o
+	$(RM) -r *.out
 	$(RM) $(TEST_DIR)/*.o
+	$(RM) $(TEST_DIR)/*~
 
 test:
 	$(MAKE) -C $(TEST_DIR)

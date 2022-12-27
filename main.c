@@ -5,8 +5,8 @@
  * @addtogroup SIM
  **/
 
-#include "physics.h"
-
+void physicsInit();
+void physicsMain();
 
 int main ()
 {
