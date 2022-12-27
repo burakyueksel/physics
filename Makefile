@@ -1,12 +1,29 @@
-TEST_DIR := tests
+# Makefile for the Phyiscs
+# Author: Burak Yueksel <mail.burakyueksel@gmail.com>
 
+
+# Compiler and flags
 CC = gcc
-OBJFILES = main.o physics.o
-TARGET = ./main
 CFLAGS = -Wall -O2
 LDFLAGS=
 
+# Source files
+SRCS= main.c physics.c
+
+# Object files
+OBJFILES = $(SRCS:.c=.o)
+
+# Test files
+TEST_DIR := tests
+
+# Executable
+TARGET = ./main
+
+
+# Default target
 all: $(TARGET)
+
+# Link object files to create executable
 
 # We use the following example:
 #./main: main.o
@@ -14,6 +31,10 @@ all: $(TARGET)
 # which generates ./main instead of a.out when running gcc
 $(TARGET): $(OBJFILES)
 	$(CC) $(CFLAGS) $(OBJFILES) -o $(TARGET) $(LDFLAGS)
+
+# Compile source files to object files
+%.o: %.c
+	$(CC) $(CFLAGS) -c $<
 
 .PHONY: clean
 
