@@ -27,5 +27,5 @@ make test
 * Run
 
 ```sh
-./physics
+./main
 ```
