@@ -8,17 +8,25 @@ CFLAGS = -Wall -O2
 LDFLAGS=
 
 # Source files
-SRCS= $(wildcard *.c)
+SRC_DIR = src
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+
+# Header files
+INC_DIR = include
+INCS = $(wildcard $(INC_DIR)/*.h)
 
 # Object files
-OBJFILES = $(SRCS:.c=.o)
+OBJ_DIR = obj
+OBJS = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
+
+# Executable
+TARGET = main
 
 # Test files
 TEST_DIR := tests
 
-# Executable
-TARGET = ./main
-
+# Include directory
+CFLAGS += -I$(INC_DIR)
 
 # Default target
 all: $(TARGET)
@@ -29,19 +37,17 @@ all: $(TARGET)
 #./main: main.o
 #	gcc main.o -o ./main
 # which generates ./main instead of a.out when running gcc
-$(TARGET): $(OBJFILES)
-	$(CC) $(CFLAGS) $(OBJFILES) -o $(TARGET) $(LDFLAGS)
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LDFLAGS)
 
 # Compile source files to object files
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INCS)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 .PHONY: clean
 
 clean:
-	rm -f $(OBJFILES) $(TARGET) *~
-	$(RM) -r *.o
-	$(RM) -r *.out
+	rm -f $(OBJS) $(TARGET) *~
 	$(RM) $(TEST_DIR)/*.o
 	$(RM) $(TEST_DIR)/*~
 
