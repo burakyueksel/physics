@@ -2,10 +2,10 @@
  * @author  Burak Yueksel
  * @date    24 December 2022
  * @brief   Test math library functions
- * @addtogroup MATH
+ * @addtogroup TEST
  **/
 
-#include "math.h"
+#include "matrix.h"
 
 int main() {
   matrix * A, * Ac, * B, * c, * d, * M, * ct, * mdp;

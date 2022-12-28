@@ -5,7 +5,7 @@
  * @author  Burak Yueksel
  * @date    24 December 2022
  * @brief   Math libraries for physics
- * @addtogroup MATH
+ * @addtogroup MATRIX
  **/
 
 #define NULL ((void *)0)
@@ -16,12 +16,7 @@
 #include <stdio.h>
 
 
-typedef float vector;
-typedef vector vector2[2];
-typedef vector vector3[3];
-typedef vector vector4[4];
 
-typedef vector4 quaternion;
 
 /*
 ///////////////////////////////////////
