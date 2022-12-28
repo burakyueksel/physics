@@ -17,6 +17,8 @@ pointObject g_physicsPointObj;
 states g_phsicsPointStates;
 
 
+/** @brief Convert quaternions to Euler angles in radians*/
+
 void quaternionToEuler(vector3 *euler_r, quaternion q) 
 {
     /*Compute the roll angle*/

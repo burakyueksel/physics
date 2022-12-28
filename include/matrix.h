@@ -4,7 +4,7 @@
 /**
  * @author  Burak Yueksel
  * @date    24 December 2022
- * @brief   Math libraries for physics
+ * @brief   Matrix libraries for physics
  * @addtogroup MATRIX
  **/
 
