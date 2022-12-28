@@ -153,4 +153,6 @@ void physicsInit()
     /* SET STATES */
     // all initial states are zero
     memset(&g_phsicsPointStates, 0, sizeof(g_phsicsPointStates));
+    // but this would break the quaternion: its scalar part cannot be zero
+    g_phsicsPointStates.rtState.q.w = 1.0f;
 }
