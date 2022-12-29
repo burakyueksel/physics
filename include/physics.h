@@ -11,6 +11,7 @@
 #include "matrix.h"
 #include "vector.h"
 
+
 typedef struct
 {
   float mass_kg;
@@ -57,6 +58,7 @@ extern states g_phsicsPointStates;
 */
 extern void physicsMain();
 extern void physicsInit();
+extern void physicsUpdate(float dt_sec);
 
 
 #endif // PHYSICS_H_
