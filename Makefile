@@ -1,4 +1,4 @@
-# Makefile for the Phyiscs
+# Makefile for the Physics
 # Author: Burak Yueksel <mail.burakyueksel@gmail.com>
 
 
