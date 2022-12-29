@@ -9,20 +9,7 @@
  **/
 
 #include "matrix.h"
-
-
-typedef float vector;
-typedef vector vector2[2];
-typedef vector vector3[3];
-typedef vector vector4[4];
-
-typedef struct
-{
-  float w; // scalar part
-  float x;
-  float y;
-  float z;
-} quaternion;
+#include "vector.h"
 
 typedef struct
 {

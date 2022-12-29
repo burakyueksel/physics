@@ -17,6 +17,36 @@ pointObject g_physicsPointObj;
 states g_phsicsPointStates;
 
 
+/** @brief Convert quaternions to a 3x3 rotation matrix*/
+
+void quaternionToRotMatrix(matrix *R, quaternion q) 
+{
+    /*Source: https://www.euclideanspace.com/maths/geometry/rotations/conversions/quaternionToMatrix/index.htm */
+    float r11 = 1 - 2*q.y*q.y - 2*q.z*q.z;
+    float r12 = 2*q.x*q.y - 2*q.z*q.w;
+    float r13 = 2*q.x*q.z + 2*q.y*q.w;
+
+    float r21 = 2*q.x*q.y + 2*q.z*q.w;
+    float r22 = 1 - 2*q.x*q.x - 2*q.z*q.z;
+    float r23 = 2*q.y*q.z - 2*q.x*q.w;
+
+    float r31 = 2*q.x*q.z - 2*q.y*q.w;
+    float r32 = 2*q.y*q.z + 2*q.x*q.w;
+    float r33 = 1 - 2*q.x*q.x - 2*q.y*q.y;
+
+    R = newMatrix(3, 3);
+
+    setMatrixElement(R, 1, 1, r11);
+    setMatrixElement(R, 1, 2, r12);
+    setMatrixElement(R, 1, 3, r13);
+    setMatrixElement(R, 2, 1, r21);
+    setMatrixElement(R, 2, 2, r22);
+    setMatrixElement(R, 2, 3, r23);
+    setMatrixElement(R, 3, 1, r31);
+    setMatrixElement(R, 3, 2, r32);
+    setMatrixElement(R, 3, 3, r33);
+}
+
 /** @brief Convert quaternions to Euler angles in radians*/
 
 void quaternionToEuler(vector3 *euler_r, quaternion q) 
@@ -69,14 +99,14 @@ void updateQuaternion(quaternion *q, vector3 rotVelBody_rps, double dt)
 /** @brief Update the translational and rotational motion in an inertial frame*/
 
 /*
-void translationalDynamics(vector3 *accInertial_mps2, vector3 forces_N) 
+void translationalDynamics(vector3 *accInertial_mps2, states pm, vector3 forces_N) 
 {
 
 }
 */
 
 /*
-void rotationalDynamics(vector3 *rotAccBody_rps2, vector3 moments_Nm) 
+void rotationalDynamics(vector3 *rotAccBody_rps2, states pm, vector3 moments_Nm) 
 {
 
 }
@@ -126,6 +156,14 @@ void physicsMain()
 
     printf("Moment of Inertia of the Point Particle:\n");
     printMatrix(g_physicsPointObj.I_kgm2);
+
+    quaternionToEuler(&g_phsicsPointStates.rtState.euler_r, g_phsicsPointStates.rtState.q);
+
+    printf("Quaternions:\n");
+    printVectorQuaternion(&g_phsicsPointStates.rtState.q);
+
+    printf("Euler Angles in rad:\n");
+    printVector3(&g_phsicsPointStates.rtState.euler_r);
 
 }
 
