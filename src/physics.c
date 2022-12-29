@@ -16,6 +16,10 @@ pointObject g_physicsPointObj;
 /*define its states*/
 states g_phsicsPointStates;
 
+/* time of simulation*/
+float g_time_s;
+
+
 
 /** @brief Convert quaternions to a 3x3 rotation matrix*/
 
@@ -142,6 +146,17 @@ void update_motion_states(states *pm, float dt_s)
     quaternionToEuler(&pm->rtState.euler_r, pm->rtState.q);
 }
 
+
+/** @brief Update Physics Function */
+void physicsUpdate(float dt_s)
+{
+    update_motion_states(&g_phsicsPointStates, dt_s);
+    
+    // print the time
+    printf("Current time is:\n");
+    printf("% 6.2f ", g_time_s);
+    printf("\n");
+}
 /** @brief Main  Physics Function */
 void physicsMain()
 {
@@ -171,6 +186,9 @@ void physicsMain()
 void physicsInit()
 {
     /* SET PARAMETERS*/
+
+    /*simulation start time*/
+    g_time_s = 0.0f;
     /*define its mass*/
     g_physicsPointObj.mass_kg    = POINT_MASS_KG;
     /*define its drag coeff*/
