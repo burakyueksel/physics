@@ -7,7 +7,8 @@
 
 #include "parameters.h"
 #include "physics.h"
-#include <math.h>
+#include <math.h> // added for computations like sqrt
+#include <string.h> // added for memset operations
 
 
 /*define a particle as a point object*/
@@ -53,7 +54,8 @@ void quaternionToRotMatrix(matrix *R, quaternion q)
 
 /** @brief Convert quaternions to Euler angles in radians*/
 
-void quaternionToEuler(vector3 *euler_r, quaternion q) 
+void quaternionToEuler(vector3 *euler_r, quaternion q)
+// Heavy WIP!! Not stable.
 {
     /*Compute the roll angle*/
     float sinr_cosp = 2.0 * (q.w * q.x + q.y * q.z);
@@ -76,7 +78,7 @@ void quaternionToEuler(vector3 *euler_r, quaternion q)
 
 /** @brief Update the quaternion using quaternion kinematics and angular velocities*/
 
-void updateQuaternion(quaternion *q, vector3 rotVelBody_rps, double dt)
+void updateQuaternion(quaternion *q, vector3 rotVelBody_rps, float dt)
 {
     /*Source for the simple math: https://ahrs.readthedocs.io/en/latest/filters/angular.html*/
     // Compute the derivative of the quaternion
@@ -120,13 +122,12 @@ void rotationalDynamics(vector3 *rotAccBody_rps2, states pm, vector3 moments_Nm)
 
 void update_motion_states(states *pm, float dt_s)
 {
-
     // Update translational motion (positions)
     for (int i=0; i<3; i++)
     {
         pm->trState.pos_Inertial_m[i] = pm->trState.pos_Inertial_m[i] + pm->trState.velInertial_mps[i]*dt_s + 0.5f*pm->trState.accInertial_mps2[i]*dt_s*dt_s;
     }
-
+    
     // Update translational motion (velocities)
     for (int i=0; i<3; i++)
     {
@@ -143,19 +144,26 @@ void update_motion_states(states *pm, float dt_s)
     updateQuaternion(&pm->rtState.q, pm->rtState.rotVelBody_rps, dt_s);
 
     // Convert quaternion to euler in radians (redundant definition, but for later visibility)
-    quaternionToEuler(&pm->rtState.euler_r, pm->rtState.q);
+    // Heavily in WIP. Not stable!
+    //quaternionToEuler(&pm->rtState.euler_r, pm->rtState.q);
 }
 
 
 /** @brief Update Physics Function */
-void physicsUpdate(float dt_s)
+void physicsUpdate(states* ps, float dt_s)
 {
-    update_motion_states(&g_phsicsPointStates, dt_s);
-    
+
+    update_motion_states(ps, dt_s);
     // print the time
     printf("Current time is:\n");
-    printf("% 6.2f ", g_time_s);
+    printf("% 6.4f ", g_time_s);
     printf("\n");
+    // Print the positions
+    printf("3D Positions (x,y,z) in meters are:\n");
+    printVector3(&g_phsicsPointStates.trState.pos_Inertial_m);
+    // Print the quaternions
+    printf("Quaternions:\n");
+    printVectorQuaternion(&g_phsicsPointStates.rtState.q);
 }
 /** @brief Main  Physics Function */
 void physicsMain()
@@ -172,13 +180,14 @@ void physicsMain()
     printf("Moment of Inertia of the Point Particle:\n");
     printMatrix(g_physicsPointObj.I_kgm2);
 
-    quaternionToEuler(&g_phsicsPointStates.rtState.euler_r, g_phsicsPointStates.rtState.q);
-
     printf("Quaternions:\n");
     printVectorQuaternion(&g_phsicsPointStates.rtState.q);
 
+/*
+    quaternionToEuler(&g_phsicsPointStates.rtState.euler_r, g_phsicsPointStates.rtState.q);
     printf("Euler Angles in rad:\n");
     printVector3(&g_phsicsPointStates.rtState.euler_r);
+*/
 
 }
 
