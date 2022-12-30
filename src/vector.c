@@ -10,7 +10,7 @@
 /* Prints the 3D vector to stdout.  Returns 0 if successful 
  * and -1 if vector is NULL.
  */
-int printVector3(vector3* vec3)
+int printVector3(vector3 vec3)
 {
   if (!vec3) return -1;
   
@@ -21,7 +21,7 @@ int printVector3(vector3* vec3)
     //  - either a - if negative or a space if positive
     //  - at least 3 spaces before the .
     //  - precision to the hundredths place
-    printf("% 6.2f ", *vec3[item]);
+    printf("% 6.4f ", vec3[item]);
     // separate rows by newlines
     printf("\n");
   }

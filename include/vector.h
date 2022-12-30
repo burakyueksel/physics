@@ -28,7 +28,7 @@ typedef struct
 ** FUNCTION DECLERATIONS
 ********************************************
 */
-int printVector3(vector3* vec3);
+int printVector3(vector3 vec3);
 int printVectorQuaternion(quaternion* q);
 
 
