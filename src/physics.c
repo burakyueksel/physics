@@ -10,6 +10,12 @@
 #include <math.h> // added for computations like sqrt
 #include <string.h> // added for memset operations
 
+/*
+BODY FRAME      : NED convention
+INERTIAL FRAME  : NED convention
+
+*/
+
 
 /*define a particle as a point object*/
 pointObject g_physicsPointObj;
@@ -104,12 +110,13 @@ void updateQuaternion(quaternion *q, vector3 rotVelBody_rps, float dt)
 
 /** @brief Update the translational and rotational motion in an inertial frame*/
 
-/*
-void translationalDynamics(vector3 *accInertial_mps2, states pm, vector3 forces_N) 
+void translationalDynamics(states* ps, vector3 forces_N) 
 {
-
+    // start simple, falling mass in vacuum
+    ps->trState.accInertial_mps2[0] = forces_N[0]/g_physicsPointObj.mass_kg;
+    ps->trState.accInertial_mps2[1] = forces_N[1]/g_physicsPointObj.mass_kg;
+    ps->trState.accInertial_mps2[2] = GRAVITY_MPS2 + (forces_N[2]/g_physicsPointObj.mass_kg);
 }
-*/
 
 /*
 void rotationalDynamics(vector3 *rotAccBody_rps2, states pm, vector3 moments_Nm) 
@@ -120,28 +127,28 @@ void rotationalDynamics(vector3 *rotAccBody_rps2, states pm, vector3 moments_Nm)
 
 /** @brief Update the translational and rotational motion in an inertial frame*/
 
-void update_motion_states(states *pm, float dt_s)
+void update_motion_states(states *ps, float dt_s)
 {
     // Update translational motion (positions)
     for (int i=0; i<3; i++)
     {
-        pm->trState.pos_Inertial_m[i] = pm->trState.pos_Inertial_m[i] + pm->trState.velInertial_mps[i]*dt_s + 0.5f*pm->trState.accInertial_mps2[i]*dt_s*dt_s;
+        ps->trState.pos_Inertial_m[i] = ps->trState.pos_Inertial_m[i] + ps->trState.velInertial_mps[i]*dt_s + 0.5f*ps->trState.accInertial_mps2[i]*dt_s*dt_s;
     }
     
     // Update translational motion (velocities)
     for (int i=0; i<3; i++)
     {
-        pm->trState.velInertial_mps[i] = pm->trState.velInertial_mps[i] + pm->trState.accInertial_mps2[i]*dt_s;
+        ps->trState.velInertial_mps[i] = ps->trState.velInertial_mps[i] + ps->trState.accInertial_mps2[i]*dt_s;
     }
 
     // Update rotational motion (velocities)
     for (int i=0; i<3; i++)
     {
-        pm->rtState.rotVelBody_rps[i] = pm->rtState.rotVelBody_rps[i] + pm->rtState.rotAccBody_rps2[i]*dt_s;
+        ps->rtState.rotVelBody_rps[i] = ps->rtState.rotVelBody_rps[i] + ps->rtState.rotAccBody_rps2[i]*dt_s;
     }
 
     // Update attitude/orientation/pose (quaternions)
-    updateQuaternion(&pm->rtState.q, pm->rtState.rotVelBody_rps, dt_s);
+    updateQuaternion(&ps->rtState.q, ps->rtState.rotVelBody_rps, dt_s);
 
     // Convert quaternion to euler in radians (redundant definition, but for later visibility)
     // Heavily in WIP. Not stable!
@@ -152,16 +159,30 @@ void update_motion_states(states *pm, float dt_s)
 /** @brief Update Physics Function */
 void physicsUpdate(states* ps, float dt_s)
 {
+    // external forces
+    vector3 extForces_N = {0.0f, 0.0f, 0.0f};
+    // translational dynamics
+    translationalDynamics(ps, extForces_N);
+    //TODO: same for the rotational dynamics
 
+    // update the motion (integration with time)
     update_motion_states(ps, dt_s);
-    // print the time
+
+    /*print the time*/
     printf("Current time is:\n");
     printf("% 6.4f ", g_time_s);
     printf("\n");
-    // Print the positions
+    /*Print the positions*/
     printf("3D Positions (x,y,z) in meters are:\n");
-    printVector3(&g_phsicsPointStates.trState.pos_Inertial_m);
-    // Print the quaternions
+    //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
+    printVector3(g_phsicsPointStates.trState.pos_Inertial_m);
+
+    /*Print the velocities*/
+    printf("3D Velocities (x,y,z) in m/s are:\n");
+    //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
+    printVector3(g_phsicsPointStates.trState.velInertial_mps);
+
+    /*Print the quaternions*/
     printf("Quaternions:\n");
     printVectorQuaternion(&g_phsicsPointStates.rtState.q);
 }
