@@ -40,8 +40,6 @@ typedef struct
   rotationalStates rtState;
 } states;
 
-
-
 /*
 ********************************************
 ** GLOBALS
@@ -53,12 +51,12 @@ extern states g_phsicsPointStates;
 
 /*
 ********************************************
-** FUNCTIONS
+** FUNCTION DECLERATIONS
 ********************************************
 */
-extern void physicsMain();
-extern void physicsInit();
-extern void physicsUpdate(float dt_sec);
+void physicsMain();
+void physicsInit();
+void physicsUpdate(states* pm, float dt_sec);
 
 
 #endif // PHYSICS_H_
