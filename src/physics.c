@@ -110,12 +110,72 @@ void updateQuaternion(quaternion *q, vector3 rotVelBody_rps, float dt)
 
 /** @brief Update the translational and rotational motion in an inertial frame*/
 
-void translationalDynamics(states* ps, vector3 forces_N) 
+void translationalDynamics(states* ps, vector3 extForces_N)
 {
-    // start simple, falling mass in vacuum
-    ps->trState.accInertial_mps2[0] = forces_N[0]/g_physicsPointObj.mass_kg;
-    ps->trState.accInertial_mps2[1] = forces_N[1]/g_physicsPointObj.mass_kg;
-    ps->trState.accInertial_mps2[2] = GRAVITY_MPS2 + (forces_N[2]/g_physicsPointObj.mass_kg);
+
+    /* start simple, falling point mass in a quadratic drag model */
+    vector3 dragForce;
+    // write the drag forces
+    for (int i=0; i<3; i++)
+    {
+        dragForce[i] = g_physicsPointObj.dragCoeff*ps->trState.velInertial_mps[i]*ps->trState.velInertial_mps[i];
+    }
+
+    // write down the model that computes the accelerations
+    ps->trState.accInertial_mps2[0] = (extForces_N[0]-dragForce[0])/g_physicsPointObj.mass_kg;
+    ps->trState.accInertial_mps2[1] = (extForces_N[1]-dragForce[1])/g_physicsPointObj.mass_kg;
+    ps->trState.accInertial_mps2[2] = GRAVITY_MPS2 + ((extForces_N[2]-dragForce[2])/g_physicsPointObj.mass_kg);
+
+    // that's it.
+
+/*
+    // Let's implement the above logic using the matrix libraries.
+    // You will see how ridiculously long it is.
+
+    matrix* dragMatrix              =   newMatrix(3, 3);
+    matrix* invMassVector           =   newMatrix(3, 1);
+    matrix* velocitySquaredVector   =   newMatrix(3, 1);
+    matrix* gravityVector           =   newMatrix(3, 1);
+    matrix* extForceVector          =   newMatrix(3, 1);
+
+    setMatrixElement(dragMatrix, 1, 1, g_physicsPointObj.dragCoeff);
+    setMatrixElement(dragMatrix, 2, 2, g_physicsPointObj.dragCoeff);
+    setMatrixElement(dragMatrix, 3, 3, g_physicsPointObj.dragCoeff);
+
+    setMatrixElement(invMassVector, 1, 1, 1.0f/g_physicsPointObj.mass_kg);
+    setMatrixElement(invMassVector, 2, 1, 1.0f/g_physicsPointObj.mass_kg);
+    setMatrixElement(invMassVector, 3, 1, 1.0f/g_physicsPointObj.mass_kg);
+
+    setMatrixElement(velocitySquaredVector, 1, 1, ps->trState.velInertial_mps[0]*ps->trState.velInertial_mps[0]);
+    setMatrixElement(velocitySquaredVector, 2, 1, ps->trState.velInertial_mps[1]*ps->trState.velInertial_mps[1]);
+    setMatrixElement(velocitySquaredVector, 3, 1, ps->trState.velInertial_mps[2]*ps->trState.velInertial_mps[2]);
+
+    setMatrixElement(extForceVector, 1, 1, extForces_N[0]);
+    setMatrixElement(extForceVector, 2, 1, extForces_N[1]);
+    setMatrixElement(extForceVector, 3, 1, extForces_N[2]);
+
+    setMatrixElement(gravityVector, 1, 1, 0.0f);
+    setMatrixElement(gravityVector, 2, 1, 0.0f);
+    setMatrixElement(gravityVector, 3, 1, GRAVITY_MPS2);
+
+    // resulting acc vector
+    matrix* accVector   = newMatrix(3,1);
+    // net forces. It will be overwritten with every computation in the following:
+    matrix* netForces   = newMatrix(3,1);
+    // 1) compute the quadratic drag forces as drag*vel^2 and put it into the net forces
+    productMatrix(dragMatrix, velocitySquaredVector, netForces);
+    // 2) subtract the drag forces from the external forces and put it into the net forces
+    subtractMatrix(extForceVector, netForces, netForces);
+    // 3) divide the net forces with the mass and put it to the acc vector
+    productMatrix(invMassVector,netForces,accVector);
+    // 4) add the gravitational acc terms
+    sumMatrix(accVector,gravityVector,accVector);
+
+    // Put the acc vector to the struct
+    ps->trState.accInertial_mps2[0] = accVector->data[0];
+    ps->trState.accInertial_mps2[1] = accVector->data[1];
+    ps->trState.accInertial_mps2[2] = accVector->data[2];
+*/
 }
 
 /*

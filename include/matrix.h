@@ -48,6 +48,7 @@ int nCols(matrix * mtx, int * n);
 int printMatrix(matrix * mtx);
 int transposeMatrix(matrix * in, matrix * out);
 int sumMatrix(matrix * mtx1, matrix * mtx2, matrix * sum);
+int subtractMatrix(matrix * mtx1, matrix * mtx2, matrix * subtract);
 int productMatrix(matrix * mtx1, matrix * mtx2, matrix * prod);
 int dotProductMatrix(matrix * v1, matrix * v2, float * prod);
 int identityMatrix(matrix * m);

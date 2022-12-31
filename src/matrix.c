@@ -180,6 +180,28 @@ int sumMatrix(matrix * mtx1, matrix * mtx2, matrix * sum)
   return 0;
 }
 
+/* Writes the subtraction of matrice mtx2 from mtx1 into another matrix
+ * Returns 0 if successful, -1 if any of the matrices
+ * are NULL, and -2 if the dimensions of the matrices are
+ * incompatible.
+ */
+int subtractMatrix(matrix * mtx1, matrix * mtx2, matrix * subtract)
+{
+  if (!mtx1 || !mtx2 || !subtract) return -1;
+  if (mtx1->rows != mtx2->rows ||
+      mtx1->rows != subtract->rows ||
+      mtx1->cols != mtx2->cols ||
+      mtx1->cols != subtract->cols)
+    return -2;
+
+  int row, col;
+  for (col = 1; col <= mtx1->cols; col++)
+    for (row = 1; row <= mtx1->rows; row++)
+      ELEM(subtract, row, col) =
+        ELEM(mtx1, row, col) - ELEM(mtx2, row, col);
+  return 0;
+}
+
 /* Writes the product of matrices mtx1 and mtx2 into matrix
  * prod.  Returns 0 if successful, -1 if any of the 
  * matrices are NULL, and -2 if the dimensions of the 
