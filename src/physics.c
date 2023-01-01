@@ -60,25 +60,31 @@ void quaternionToRotMatrix(matrix *R, quaternion q)
 
 /** @brief Convert quaternions to Euler angles in radians*/
 
-void quaternionToEuler(vector3 *euler_r, quaternion q)
-// Heavy WIP!! Not stable.
+void quaternionToEuler(euler *euler_r, quaternion q)
+// source: https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles#Euler_angles_(in_3-2-1_sequence)_to_quaternion_conversion
 {
-    /*Compute the roll angle*/
+    //Compute the roll angle
     float sinr_cosp = 2.0 * (q.w * q.x + q.y * q.z);
     float cosr_cosp = 1.0 - 2.0 * (q.x * q.x + q.y * q.y);
-    *euler_r[0] = atan2(sinr_cosp, cosr_cosp);
+    euler_r->roll = atan2(sinr_cosp, cosr_cosp);
 
-    /*Compute the pitch angle*/
-    float sinp = 2.0 * (q.w * q.y - q.z * q.x);
+    //Compute the pitch angle
+    float sinp = 1 + 2.0 * (q.w * q.x - q.y * q.z);
+    float cosp = 1 - 2.0 * (q.y * q.x - q.y * q.y);
+    euler_r->pitch= 2 * atan2(sinp, cosp) - M_PI / 2;
+
+    /*
+    // alternative
     if (fabs(sinp) >= 1)
-        *euler_r[1] = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+        euler_r->pitch = copysign(M_PI / 2, sinp); // use 90 degrees if out of range
     else
-        *euler_r[1] = asin(sinp);
+        euler_r->pitch = asin(sinp);
+    */
 
-    /*Compute the yaw angle*/
+    //Compute the yaw angle
     float siny_cosp = 2.0 * (q.w * q.z + q.x * q.y);
     float cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z);
-    *euler_r[3] = atan2(siny_cosp, cosy_cosp);
+    euler_r->yaw = atan2(siny_cosp, cosy_cosp);
 }
 
 
@@ -189,10 +195,15 @@ void rotationalDynamics(states* ps, vector3 extMoments_Nm)
     matrix* rotAcc          = newMatrix(3,1);
     matrix* inverseInertia  = newMatrix(3,3);
 
+    // set the rotational velocities
     setMatrixElement(omega,1,1,ps->rtState.rotVelBody_rps[0]);
     setMatrixElement(omega,2,1,ps->rtState.rotVelBody_rps[1]);
     setMatrixElement(omega,3,1,ps->rtState.rotVelBody_rps[2]);
 
+    // set the external moments
+    setMatrixElement(externalMoments,1,1,extMoments_Nm[0]);
+    setMatrixElement(externalMoments,2,1,extMoments_Nm[1]);
+    setMatrixElement(externalMoments,3,1,extMoments_Nm[2]);
     // w x Jw term
     productMatrix(g_physicsPointObj.I_kgm2, omega, Jomega);
     crossProduct3DVec(omega, Jomega, omegaMoments);
@@ -208,7 +219,6 @@ void rotationalDynamics(states* ps, vector3 extMoments_Nm)
     getMatrixElement(rotAcc, 1, 1, &ps->rtState.rotAccBody_rps2[0]);
     getMatrixElement(rotAcc, 2, 1, &ps->rtState.rotAccBody_rps2[1]);
     getMatrixElement(rotAcc, 3, 1, &ps->rtState.rotAccBody_rps2[2]);
-
 }
 
 /** @brief Update the translational and rotational motion in an inertial frame*/
@@ -237,8 +247,7 @@ void update_motion_states(states *ps, float dt_s)
     updateQuaternion(&ps->rtState.q, ps->rtState.rotVelBody_rps, dt_s);
 
     // Convert quaternion to euler in radians (redundant definition, but for later visibility)
-    // Heavily in WIP. Not stable!
-    //quaternionToEuler(&pm->rtState.euler_r, pm->rtState.q);
+    quaternionToEuler(&ps->rtState.euler_r, ps->rtState.q);
 }
 
 
@@ -273,6 +282,11 @@ void physicsUpdate(states* ps, float dt_s)
     /*Print the quaternions*/
     printf("Quaternions:\n");
     printVectorQuaternion(&g_phsicsPointStates.rtState.q);
+
+    /*Print the Euler Angles in rad*/
+    printf("Euler angles in radians are:\n");
+    //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
+    printVectorEuler(&g_phsicsPointStates.rtState.euler_r);
 }
 /** @brief Main  Physics Function */
 void physicsMain()
