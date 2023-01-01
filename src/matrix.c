@@ -226,6 +226,29 @@ int productMatrix(matrix * mtx1, matrix * mtx2, matrix * prod)
   return 0;
 }
 
+/* Writes the cross product of two 3D vectors mtx1 and mtx2
+ * Returns 0 if successful, -1 if any of the
+ * vectors are NULL, and -2 if the dimensions of the
+ * vectors are incompatible and not 3x1
+ */
+int crossProduct3DVec(matrix * mtx1, matrix * mtx2, matrix * crossProd)
+{
+  if (!mtx1 || !mtx2 || !crossProd) return -1;
+  if (mtx1->cols != mtx2->cols ||
+      mtx1->rows != mtx2->rows ||
+      mtx2->cols != crossProd->cols ||
+      mtx2->rows != crossProd->rows ||
+      mtx1->cols != 1 ||
+      mtx1->rows != 3)
+    return -2;
+
+  ELEM(crossProd,1,1) = ELEM(mtx1,2,1) * ELEM(mtx2,3,1) - ELEM(mtx1,3,1) * ELEM(mtx2,2,1);
+  ELEM(crossProd,2,1) = ELEM(mtx1,3,1) * ELEM(mtx2,1,1) - ELEM(mtx1,1,1) * ELEM(mtx2,3,1);
+  ELEM(crossProd,3,1) = ELEM(mtx1,1,1) * ELEM(mtx2,2,1) - ELEM(mtx1,2,1) * ELEM(mtx2,1,1);
+
+  return 0;
+}
+
 /* Writes the dot product of vectors v1 and v2 into 
  * reference prod.  Returns 0 if successful, -1 if any of
  * v1, v2, or prod are NULL, -2 if either matrix is not a 
@@ -303,3 +326,93 @@ int diagonalMatrix(matrix * v, matrix * mtx)
         ELEM(mtx, row, col) = 0.0;
   return 0;
 }
+
+int invertDiagonalMatrix(matrix* m, matrix* m_inv)
+{
+  // do m and m_inv exist?
+  if (!m || !m_inv) return -2;
+  // m and m_inv must have the same dimensions
+  if (m->rows != m_inv->rows || m->cols != m_inv->cols) return -1;
+  // matrix needs to be diagonal for this function
+  if (!isMatrixDiagonal(m)) return 0;
+
+  int row, col;
+  for (col = 1; col <= m_inv->cols; col++)
+    for (row = 1; row <= m_inv->rows; row++)
+      if (row == col)
+        ELEM(m_inv, row, col) = 1/ELEM(m, row, col);
+      else
+        ELEM(m_inv, row, col) = 0.0;
+  return 0;
+}
+
+/*
+
+int inverseSquareMatrix(matrix* mtx, matrix* mtx_inv)
+{
+  // if the matrix is not square, do not do inversion.
+  if (!isMatrixSquare(mtx)) return 0;
+  int row, col;
+  for (col = 1; col <= mtx->cols; col++)
+  {
+    for (row = 1; row <= mtx->rows; row++)
+    {
+      ELEM(mtx_inv, row, col) = 0.0;
+    }
+    ELEM(mtx_inv, row, col) = 1.0;
+  }
+
+}
+
+
+int invert_matrix(int n, double A[n][n], double A_inv[n][n]) {
+    int i, j, k;
+    double max, temp, sum;
+
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            A_inv[i][j] = 0.0;
+        }
+        A_inv[i][i] = 1.0;
+    }
+
+    for (i = 0; i < n; i++) {
+        max = -1.0;
+        for (k = i; k < n; k++) {
+            if (fabs(A[k][i]) > max) {
+                max = fabs(A[k][i]);
+                j = k;
+            }
+        }
+        if (fabs(max) < EPSILON) {
+            return 0;
+        }
+        if (j != i) {
+            for (k = 0; k < n; k++) {
+                temp = A[i][k];
+                A[i][k] = A[j][k];
+                A[j][k] = temp;
+
+                temp = A_inv[i][k];
+                A_inv[i][k] = A_inv[j][k];
+                A_inv[j][k] = temp;
+            }
+        }
+        temp = A[i][i];
+        for (k = 0; k < n; k++) {
+            A[i][k] /= temp;
+            A_inv[i][k] /= temp;
+        }
+        for (j = 0; j < n; j++) {
+            if (j != i) {
+                temp = A[j][i];
+                for (k = 0; k < n; k++) {
+                    A[j][k] -= A[i][k] * temp;
+                    A_inv[j][k] -= A_inv[i][k] * temp;
+                }
+            }
+        }
+    }
+    return 1;
+}
+*/

@@ -50,12 +50,14 @@ int transposeMatrix(matrix * in, matrix * out);
 int sumMatrix(matrix * mtx1, matrix * mtx2, matrix * sum);
 int subtractMatrix(matrix * mtx1, matrix * mtx2, matrix * subtract);
 int productMatrix(matrix * mtx1, matrix * mtx2, matrix * prod);
+int crossProduct3DVec(matrix * mtx1, matrix * mtx2, matrix * crossProd);
 int dotProductMatrix(matrix * v1, matrix * v2, float * prod);
 int identityMatrix(matrix * m);
 int isMatrixSquare(matrix * mtx);
 int isMatrixDiagonal(matrix * mtx);
 int isMatrixUpperTriangular(matrix * mtx);
 int diagonalMatrix(matrix * v, matrix * mtx);
+int invertDiagonalMatrix(matrix* m, matrix* m_inv);
 
 
 
