@@ -30,6 +30,7 @@ typedef struct
 */
 int printVector3(vector3 vec3);
 int printVectorQuaternion(quaternion* q);
+void crossProduct(vector3 a, vector3 b, vector3 axb);
 
 
 #endif // VECTOR_H_

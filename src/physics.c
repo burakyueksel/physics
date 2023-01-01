@@ -178,12 +178,38 @@ void translationalDynamics(states* ps, vector3 extForces_N)
 */
 }
 
-/*
-void rotationalDynamics(vector3 *rotAccBody_rps2, states pm, vector3 moments_Nm) 
+void rotationalDynamics(states* ps, vector3 extMoments_Nm)
 {
+    // source: https://en.wikipedia.org/wiki/Rigid_body_dynamics
+    matrix* omega           = newMatrix(3,1);
+    matrix* Jomega          = newMatrix(3,1);
+    matrix* omegaMoments    = newMatrix(3,1);
+    matrix* netMoments      = newMatrix(3,1);
+    matrix* externalMoments = newMatrix(3,1);
+    matrix* rotAcc          = newMatrix(3,1);
+    matrix* inverseInertia  = newMatrix(3,3);
+
+    setMatrixElement(omega,1,1,ps->rtState.rotVelBody_rps[0]);
+    setMatrixElement(omega,2,1,ps->rtState.rotVelBody_rps[1]);
+    setMatrixElement(omega,3,1,ps->rtState.rotVelBody_rps[2]);
+
+    // w x Jw term
+    productMatrix(g_physicsPointObj.I_kgm2, omega, Jomega);
+    crossProduct3DVec(omega, Jomega, omegaMoments);
+    // tau - w x Jw term, which equates itself to J.omega_dot
+    subtractMatrix(externalMoments, omegaMoments, netMoments);
+    // invert inertia matrix, which is diagonal
+    // TODO: consider doing this in init and once.
+    invertDiagonalMatrix(g_physicsPointObj.I_kgm2, inverseInertia);
+    // compute rotational accelerations (omega_dot)
+    productMatrix(inverseInertia,netMoments,rotAcc);
+
+    // now put the rot acc to the state struct
+    getMatrixElement(rotAcc, 1, 1, &ps->rtState.rotAccBody_rps2[0]);
+    getMatrixElement(rotAcc, 2, 1, &ps->rtState.rotAccBody_rps2[1]);
+    getMatrixElement(rotAcc, 3, 1, &ps->rtState.rotAccBody_rps2[2]);
 
 }
-*/
 
 /** @brief Update the translational and rotational motion in an inertial frame*/
 
@@ -224,6 +250,8 @@ void physicsUpdate(states* ps, float dt_s)
     // translational dynamics
     translationalDynamics(ps, extForces_N);
     //TODO: same for the rotational dynamics
+    vector3 extMoments_Nm = {0.1f, 0.0f, 0.0f};
+    rotationalDynamics(ps, extMoments_Nm);
 
     // update the motion (integration with time)
     update_motion_states(ps, dt_s);
