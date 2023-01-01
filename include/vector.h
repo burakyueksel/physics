@@ -23,6 +23,14 @@ typedef struct
   float z;
 } quaternion;
 
+typedef struct vector
+{
+  float roll;
+  float pitch;
+  float yaw;
+} euler;
+
+
 /*
 ********************************************
 ** FUNCTION DECLERATIONS
@@ -30,6 +38,7 @@ typedef struct
 */
 int printVector3(vector3 vec3);
 int printVectorQuaternion(quaternion* q);
+int printVectorEuler(euler* e);
 void crossProduct(vector3 a, vector3 b, vector3 axb);
 
 

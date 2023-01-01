@@ -46,6 +46,24 @@ int printVectorQuaternion(quaternion* q)
   return 0;
 }
 
+/* Prints the 3D euler angle vector to stdout.  Returns 0 if successful
+ * and -1 if mtx is NULL.
+ */
+int printVectorEuler(euler* e)
+{
+  if (!e) return -1;
+
+  int item;
+  for (item = 0; item < 3; item++) 
+  {
+    // Print the floating-point element
+    printf("% 6.2f ", *((float*)e + item));
+    // separate rows by newlines
+    printf("\n");
+  }
+  return 0;
+}
+
 void crossProduct(vector3 a, vector3 b, vector3 axb)
 {
   axb[0] = a[1]*b[2] - a[2]*b[1];

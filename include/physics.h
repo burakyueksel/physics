@@ -30,7 +30,7 @@ typedef struct
 {
   vector3 rotAccBody_rps2;
   vector3 rotVelBody_rps;
-  vector3 euler_r;
+  euler euler_r;
   quaternion q;
 } rotationalStates;
 
