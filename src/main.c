@@ -8,6 +8,7 @@
 #include "controls.h"
 #include "parameters.h"
 #include "physics.h"
+#include "sensors.h"
 #include <unistd.h> // for usleep function  
 
 extern float g_time_s;
@@ -26,7 +27,7 @@ int main ()
     float ki = kd;
 
     initPID(&pid, kp, kd, ki);
-    float setZPos_m = 10.0f;
+    float setZPos_m = -10.0f;
     // run the time loop (constant dt_sec, i.e. discrete time)
     while (g_time_s<=T_END_S)
     {
@@ -44,6 +45,14 @@ int main ()
         // sleep for DT_S microseconds
         usleep(DT_S*1000000.f);
         g_time_s = g_time_s + DT_S;
+
+        // Barometer test
+
+        BarometerData barometer = getBarometerReadings(20, -ps->trState.pos_Inertial_m[2]);
+
+        printf("Temperature: %f C\n", barometer.temperature);
+        printf("Pressure: %f Pa\n", barometer.pressure);
+        printf("Altitude: %f m\n", barometer.altitude);
     }
 
     physicsMain();

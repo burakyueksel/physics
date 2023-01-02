@@ -20,6 +20,12 @@
 
 // Environment parameters
 #define ENV_GRAVITY_MPS2 9.80665f // https://en.wikipedia.org/wiki/Standard_gravity
+#define ENV_R 287.0  // gas constant for air (J/kg/K)
+#define ENV_L 0.0065  // temperature lapse rate (K/m)
+#define ENV_P0 101325.0  // standard atmospheric pressure at sea level (Pa)
+
+// Barometer parameters
+#define BARO_NOISE_SD 10.0  // standard deviation of noise (in Pa)
 
 // Simulation parameters
 #define DT_S        0.001f   // discrete time step in seconds
