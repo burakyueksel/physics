@@ -130,7 +130,7 @@ void translationalDynamics(states* ps, vector3 extForces_N)
     // write down the model that computes the accelerations
     ps->trState.accInertial_mps2[0] = (extForces_N[0]-dragForce[0])/g_physicsPointObj.mass_kg;
     ps->trState.accInertial_mps2[1] = (extForces_N[1]-dragForce[1])/g_physicsPointObj.mass_kg;
-    ps->trState.accInertial_mps2[2] = GRAVITY_MPS2 + ((extForces_N[2]-dragForce[2])/g_physicsPointObj.mass_kg);
+    ps->trState.accInertial_mps2[2] = ENV_GRAVITY_MPS2 + ((extForces_N[2]-dragForce[2])/g_physicsPointObj.mass_kg);
 
     // that's it.
 
@@ -162,7 +162,7 @@ void translationalDynamics(states* ps, vector3 extForces_N)
 
     setMatrixElement(gravityVector, 1, 1, 0.0f);
     setMatrixElement(gravityVector, 2, 1, 0.0f);
-    setMatrixElement(gravityVector, 3, 1, GRAVITY_MPS2);
+    setMatrixElement(gravityVector, 3, 1, ENV_GRAVITY_MPS2);
 
     // resulting acc vector
     matrix* accVector   = newMatrix(3,1);
@@ -252,14 +252,12 @@ void update_motion_states(states *ps, float dt_s)
 
 
 /** @brief Update Physics Function */
-void physicsUpdate(states* ps, float dt_s)
+void physicsUpdate(states* ps, vector3 extForces_N, vector3 extMoments_Nm, float dt_s)
 {
-    // external forces
-    vector3 extForces_N = {0.0f, 0.0f, 0.0f};
+
     // translational dynamics
     translationalDynamics(ps, extForces_N);
-    //TODO: same for the rotational dynamics
-    vector3 extMoments_Nm = {0.1f, 0.0f, 0.0f};
+    // rotational dynamics
     rotationalDynamics(ps, extMoments_Nm);
 
     // update the motion (integration with time)

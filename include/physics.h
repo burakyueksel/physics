@@ -56,7 +56,7 @@ extern states g_phsicsPointStates;
 */
 void physicsMain();
 void physicsInit();
-void physicsUpdate(states* pm, float dt_sec);
+void physicsUpdate(states* ps, vector3 extForces_N, vector3 extMoments_Nm, float dt_s);
 
 
 #endif // PHYSICS_H_

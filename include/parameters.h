@@ -19,10 +19,13 @@
 #define POINT_DRAGCOEFF  0.1f
 
 // Environment parameters
-#define GRAVITY_MPS2 9.80665f // https://en.wikipedia.org/wiki/Standard_gravity
+#define ENV_GRAVITY_MPS2 9.80665f // https://en.wikipedia.org/wiki/Standard_gravity
 
 // Simulation parameters
 #define DT_S        0.001f   // discrete time step in seconds
 #define T_END_S     20.0f    // end of simulation time
 
+// Control parameters
+#define CTRL_PID_OMEGA_RPS  8.0f
+#define CTRL_PID_DAMPING    8.0f
 #endif // PARAMETERS_H_
