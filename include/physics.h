@@ -54,7 +54,6 @@ extern states g_phsicsPointStates;
 ** FUNCTION DECLERATIONS
 ********************************************
 */
-void physicsMain();
 void physicsInit();
 void physicsUpdate(states* ps, vector3 extForces_N, vector3 extMoments_Nm, float dt_s);
 

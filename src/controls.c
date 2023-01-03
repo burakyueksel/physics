@@ -6,6 +6,7 @@
  **/
 
 #include "controls.h"
+#include "parameters.h"
 
 // Initialize PID controller
 void initPID(PIDController *pid, float kp, float ki, float kd)
@@ -29,3 +30,14 @@ float updatePID(PIDController *pid, float error, float dt)
   float output = pid->kp * pid->error + pid->ki * pid->integral + pid->kd * pid->derivative;
   return output;
 }
+
+/*
+void ctrlInit(PIDController* pid)
+{
+  float kp = POINT_MASS_KG * CTRL_PID_OMEGA_RPS*CTRL_PID_OMEGA_RPS/ENV_GRAVITY_MPS2;
+  float kd = 2.0 * CTRL_PID_OMEGA_RPS * CTRL_PID_DAMPING/ENV_GRAVITY_MPS2;
+  float ki = kd;
+
+  initPID(&pid, kp, kd, ki);
+}
+*/
