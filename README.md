@@ -1,5 +1,7 @@
-# physics
+# Content
 Physics for robotics, with focus on mechanics, rigid body motion, aerodynamics, and so on.
+
+I stick to float instead of double, for anticipating future usage of the functions in ressource constrained computational units.
 
 ## Work In Progress
 
@@ -11,14 +13,15 @@ Current status:
 * Euler forward for translation and rotational motion is written.
 * Quaterion/Euler angles/Rotation matrix transformations ara added.
 * Time is added, running on a loop in main.c, with fixed discrete time stamps.
+* ADynamics for translational and rotational motion (2nd Order Newton-Euler) are added.
+* Controls: Classical PID with desired bandwidth and damping characteristics.
+* Sensors: Barometer and IMU models are added.
 
 General TODOs:
 
-* Add dynamics for translational and rotational motion (2nd Order Newton-Euler).
 * Add random white noise to DT_S (discere time stamps).
 * Improve dynamics with aerodynamics, elasticity, and other factors.
 * Add controls library for controling the motion.
-    * Classical PID with desired bandwidth and damping characteristics.
     * More advanced methods for aerial robotics (e.g. SE(3), quaternion based, etc).
     * Other recent studies (INDI, ANDI, etc).
 * Currently only point mass is considered. Consider other types.
