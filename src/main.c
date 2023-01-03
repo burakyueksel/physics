@@ -6,6 +6,7 @@
  **/
 
 #include "controls.h"
+#include "output.h"
 #include "parameters.h"
 #include "physics.h"
 #include "sensors.h"
@@ -22,11 +23,8 @@ int main ()
     states* ps;
     // PID controller for the z position
     PIDController pid;
-    float kp = POINT_MASS_KG * CTRL_PID_OMEGA_RPS*CTRL_PID_OMEGA_RPS/ENV_GRAVITY_MPS2;
-    float kd = 2.0 * CTRL_PID_OMEGA_RPS * CTRL_PID_DAMPING/ENV_GRAVITY_MPS2;
-    float ki = kd;
-
-    initPID(&pid, kp, kd, ki);
+    // init PID
+    initPID(&pid, CTRL_PID_KP, CTRL_PID_KD, CTRL_PID_KI);
     float setZPos_m = -10.0f;
     // run the time loop (constant dt_sec, i.e. discrete time)
     while (g_time_s<=T_END_S)
@@ -53,9 +51,29 @@ int main ()
         printf("Temperature: %f C\n", barometer.temperature);
         printf("Pressure: %f Pa\n", barometer.pressure);
         printf("Altitude: %f m\n", barometer.altitude);
+
+        /*print the time*/
+        printf("Current time is:\n");
+        printf("% 6.4f ", g_time_s);
+        printf("\n");
+        /*Print the positions*/
+        printf("3D Positions (x,y,z) in meters are:\n");
+        //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
+        printVector3(g_phsicsPointStates.trState.pos_Inertial_m);
+
+        /*Print the velocities*/
+        printf("3D Velocities (x,y,z) in m/s are:\n");
+        //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
+        printVector3(g_phsicsPointStates.trState.velInertial_mps);
+
+        /*Print the quaternions*/
+        printf("Quaternions:\n");
+        printVectorQuaternion(&g_phsicsPointStates.rtState.q);
+
+        /*Print the Euler Angles in rad*/
+        printf("Euler angles in radians are:\n");
+        //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
+        printVectorEuler(&g_phsicsPointStates.rtState.euler_r);
     }
-
-    physicsMain();
-
     return 0;
 }

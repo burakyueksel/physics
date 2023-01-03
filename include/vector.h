@@ -36,9 +36,6 @@ typedef struct vector
 ** FUNCTION DECLERATIONS
 ********************************************
 */
-int printVector3(vector3 vec3);
-int printVectorQuaternion(quaternion* q);
-int printVectorEuler(euler* e);
 void crossProduct(vector3 a, vector3 b, vector3 axb);
 
 

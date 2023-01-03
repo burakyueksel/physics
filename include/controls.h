@@ -19,7 +19,8 @@ typedef struct {
   float prev_error;  // Previous error
 } PIDController;
 
-void initPID(PIDController *pid, float kp, float ki, float kd);
+//void ctrlInit(PIDController* pid);
+void initPID(PIDController* pid, float kp, float ki, float kd);
 float updatePID(PIDController *pid, float error, float dt);
 
 #endif // CONTROLS_H_

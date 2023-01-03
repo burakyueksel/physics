@@ -254,62 +254,12 @@ void update_motion_states(states *ps, float dt_s)
 /** @brief Update Physics Function */
 void physicsUpdate(states* ps, vector3 extForces_N, vector3 extMoments_Nm, float dt_s)
 {
-
     // translational dynamics
     translationalDynamics(ps, extForces_N);
     // rotational dynamics
     rotationalDynamics(ps, extMoments_Nm);
-
     // update the motion (integration with time)
     update_motion_states(ps, dt_s);
-
-    /*print the time*/
-    printf("Current time is:\n");
-    printf("% 6.4f ", g_time_s);
-    printf("\n");
-    /*Print the positions*/
-    printf("3D Positions (x,y,z) in meters are:\n");
-    //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
-    printVector3(g_phsicsPointStates.trState.pos_Inertial_m);
-
-    /*Print the velocities*/
-    printf("3D Velocities (x,y,z) in m/s are:\n");
-    //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
-    printVector3(g_phsicsPointStates.trState.velInertial_mps);
-
-    /*Print the quaternions*/
-    printf("Quaternions:\n");
-    printVectorQuaternion(&g_phsicsPointStates.rtState.q);
-
-    /*Print the Euler Angles in rad*/
-    printf("Euler angles in radians are:\n");
-    //printVector3(ps->trState.pos_Inertial_m); // gives same result as using the global
-    printVectorEuler(&g_phsicsPointStates.rtState.euler_r);
-}
-/** @brief Main  Physics Function */
-void physicsMain()
-{
-    // short test
-    printf("Mass the Point Particle:\n");
-    printf("% 6.2f ", g_physicsPointObj.mass_kg);
-    printf("\n");
-
-    printf("Drag Coeff of the Point Particle:\n");
-    printf("% 6.2f ", g_physicsPointObj.dragCoeff);
-    printf("\n");
-
-    printf("Moment of Inertia of the Point Particle:\n");
-    printMatrix(g_physicsPointObj.I_kgm2);
-
-    printf("Quaternions:\n");
-    printVectorQuaternion(&g_phsicsPointStates.rtState.q);
-
-/*
-    quaternionToEuler(&g_phsicsPointStates.rtState.euler_r, g_phsicsPointStates.rtState.q);
-    printf("Euler Angles in rad:\n");
-    printVector3(&g_phsicsPointStates.rtState.euler_r);
-*/
-
 }
 
 /** @brief Initialize Physics */
