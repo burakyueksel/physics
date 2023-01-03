@@ -10,12 +10,27 @@
 
 
 // Structure to store barometer data
-typedef struct {
-  double temperature;  // temperature (in C)
-  double pressure;     // pressure (in Pa)
-  double altitude;     // altitude (in m)
+typedef struct
+{
+  float temperature;  // temperature (in C)
+  float pressure;     // pressure (in Pa)
+  float altitude;     // altitude (in m)
 } BarometerData;
 
+// Struct for storing IMU sensor measurements
+typedef struct
+{
+  float accelerometer_x;
+  float accelerometer_y;
+  float accelerometer_z;
+  float gyroscope_x;
+  float gyroscope_y;
+  float gyroscope_z;
+} IMUData;
+
 BarometerData getBarometerReadings(float temperature, float altitude);
+IMUData getIMUReadings(float true_accelerometer_x, float true_accelerometer_y,
+                                   float true_accelerometer_z, float true_gyroscope_x,
+                                   float true_gyroscope_y, float true_gyroscope_z);
 
 #endif // SENSORS_H_

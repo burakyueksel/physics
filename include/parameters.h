@@ -27,6 +27,12 @@
 // Barometer parameters
 #define BARO_NOISE_SD 10.0  // standard deviation of noise (in Pa)
 
+// Parameters for the IMU sensor model
+#define BIAS_ACCELEROMETER 0.1  // m/s^2
+#define BIAS_GYROSCOPE 0.01     // rad/s
+#define NOISE_ACCELEROMETER 0.01  // m/s^2
+#define NOISE_GYROSCOPE 0.001     // rad/s
+
 // Simulation parameters
 #define DT_S        0.001f   // discrete time step in seconds
 #define T_END_S     20.0f    // end of simulation time
