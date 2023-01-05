@@ -28,7 +28,7 @@ typedef struct
   float gyroscope_z;
 } IMUData;
 
-BarometerData getBarometerReadings(float temperature, float altitude);
+BarometerData getBarometerReadings(float temperature, float true_altitude_m);
 IMUData getIMUReadings(float true_accelerometer_x, float true_accelerometer_y,
                                    float true_accelerometer_z, float true_gyroscope_x,
                                    float true_gyroscope_y, float true_gyroscope_z);
