@@ -46,7 +46,7 @@ int main ()
 
         // Barometer test
 
-        BarometerData barometer = getBarometerReadings(20, -ps->trState.pos_Inertial_m[2]);
+        BarometerData barometer = getBarometerReadings(ENV_TEMP_C, -ps->trState.pos_Inertial_m[2]);
 
         printf("Temperature: %f C\n", barometer.temperature);
         printf("Pressure: %f Pa\n", barometer.pressure);

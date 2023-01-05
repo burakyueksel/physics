@@ -28,6 +28,7 @@
 #define ENV_AIR_MOLAR_MASS 0.0289644 // Molar mass of air (kg/mol)
 #define ENV_T0  288.15 // Standard temperature at sea level (K)
 #define ENV_ZERO_CELCIUS 273.15 // Zero (0) Celcius in Kelvins (K)
+#define ENV_TEMP_C 20   // temperature of the air outside (C)
 
 // Barometer parameters
 #define BARO_NOISE_SD 3.0  // standard deviation of noise (in Pa)
