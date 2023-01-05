@@ -19,13 +19,19 @@
 #define POINT_DRAGCOEFF  0.1f
 
 // Environment parameters
-#define ENV_GRAVITY_MPS2 9.80665f // https://en.wikipedia.org/wiki/Standard_gravity
-#define ENV_R 287.0  // gas constant for air (J/kg/K)
-#define ENV_L 0.0065  // temperature lapse rate (K/m)
+// https://en.wikipedia.org/wiki/Standard_gravity
+// https://community.bosch-sensortec.com/t5/Question-and-answers/How-to-calculate-the-altitude-from-the-pressure-sensor-data/qaq-p/5702?lightbox-message-images-47339=11439i69B5F86B1DCF9625
+#define ENV_GRAVITY_MPS2 9.80665f
+#define ENV_R 8.3144598   // universal gas constant for air (J/kg/K)
+#define ENV_L -0.0065  // temperature lapse rate (K/m) at P0 and T0
 #define ENV_P0 101325.0  // standard atmospheric pressure at sea level (Pa)
+#define ENV_AIR_MOLAR_MASS 0.0289644 // Molar mass of air (kg/mol)
+#define ENV_T0  288.15 // Standard temperature at sea level (K)
+#define ENV_ZERO_CELCIUS 273.15 // Zero (0) Celcius in Kelvins (K)
 
 // Barometer parameters
-#define BARO_NOISE_SD 10.0  // standard deviation of noise (in Pa)
+#define BARO_NOISE_SD 3.0  // standard deviation of noise (in Pa)
+#define BARO_BIAS 5.0 // bias of noise (in Pa)
 
 // Parameters for the IMU sensor model
 #define BIAS_ACCELEROMETER 0.1  // m/s^2

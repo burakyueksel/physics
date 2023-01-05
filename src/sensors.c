@@ -10,16 +10,25 @@
 #include "sensors.h"
 #include <math.h>
 
+float computeAltitude(float pressure, float temperature) {
+    // Compute the altitude using the ideal gas law and the international standard atmosphere model
+    float altitude = 0 + ((temperature + ENV_ZERO_CELCIUS) / ENV_L) * (pow((pressure / ENV_P0), (-1.0 * ENV_L * ENV_R / (ENV_AIR_MOLAR_MASS * ENV_GRAVITY_MPS2)))-1.0);
+    return altitude;
+}
+
 // Function to simulate barometer readings
-BarometerData getBarometerReadings(float temperature, float altitude)
+BarometerData getBarometerReadings(float temperature, float true_altitude_m)
 {
   BarometerData barometer;
 
   barometer.temperature = temperature;
-  barometer.altitude = altitude;
 
   // Compute pressure using the barometric formula
-  barometer.pressure = ENV_P0 * pow(1 - ENV_L * altitude / (temperature + 273.15), (ENV_GRAVITY_MPS2 * 0.0289644) / (ENV_R * ENV_L));
+  barometer.pressure = BARO_BIAS + BARO_NOISE_SD * randn() + ENV_P0 * pow(1 + ENV_L * (true_altitude_m-0) / (temperature + ENV_ZERO_CELCIUS), -1.0 * (ENV_GRAVITY_MPS2 * ENV_AIR_MOLAR_MASS) / (ENV_R * ENV_L));
+
+  // compute altitude from pressure and temperature
+  barometer.altitude = computeAltitude(barometer.pressure, barometer.temperature);
+
 
   return barometer;
 }
