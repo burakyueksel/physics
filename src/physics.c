@@ -219,6 +219,8 @@ void rotationalDynamics(states* ps, vector3 extMoments_Nm)
     getMatrixElement(rotAcc, 1, 1, &ps->rtState.rotAccBody_rps2[0]);
     getMatrixElement(rotAcc, 2, 1, &ps->rtState.rotAccBody_rps2[1]);
     getMatrixElement(rotAcc, 3, 1, &ps->rtState.rotAccBody_rps2[2]);
+
+    // Todo: delete the temp matrices?
 }
 
 /** @brief Update the translational and rotational motion in an inertial frame*/

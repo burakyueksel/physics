@@ -13,20 +13,24 @@ Current status:
 * Euler forward for translation and rotational motion is written.
 * Quaterion/Euler angles/Rotation matrix transformations ara added.
 * Time is added, running on a loop in main.c, with fixed discrete time stamps.
-* ADynamics for translational and rotational motion (2nd Order Newton-Euler) are added.
+* Dynamics for translational and rotational motion (2nd Order Newton-Euler) are added.
 * Controls: Classical PID with desired bandwidth and damping characteristics.
 * Sensors: Barometer and IMU models are added.
 
 General TODOs:
 
-* Add random white noise to DT_S (discere time stamps).
+* Decide for the matrix library: Standford or own?
+* Add quadrotor dynamics and control effectiveness matrix
+* Add hexa and octo too
+* Add fixed-wing? Let's see.
+* Add actuator dynamics and their controls too.
+* Add random white noise to DT_S (discere time stamps) for technologies (e.g. controls, sensors, where time integration is done not by the reality but by computers, MCUs, etc).
 * Improve dynamics with aerodynamics, elasticity, and other factors.
 * Add controls library for controling the motion.
     * More advanced methods for aerial robotics (e.g. SE(3), quaternion based, etc).
-    * Other recent studies (INDI, ANDI, etc).
 * Currently only point mass is considered. Consider other types.
-* Add actuator dynamics and their controls too.
-* Add sensor models (noise, bias) and sensor fusion libraries
+* Add sensor models (noise, bias) and sensor fusion libraries.
+* Add mono and stereo camera models.
 * Where and how to seperate aerial robotics with other robots (e.g. robotic arms, automobies) in a clean, readable and simple way?
 * Robotic arm: forward/inverse kinematics and dynamics.
 * Humanoids?
