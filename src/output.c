@@ -63,3 +63,8 @@ int printVectorEuler(euler* e)
   }
   return 0;
 }
+
+void writeScalarToLog(float time_s, float value, FILE* log_file)
+{
+  fprintf(log_file, "%f %f\n", time_s, value);
+}

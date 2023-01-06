@@ -18,6 +18,5 @@
 int printVector3(vector3 vec3);
 int printVectorQuaternion(quaternion* q);
 int printVectorEuler(euler* e);
-
-
+void writeScalarToLog(float time_s, float value, FILE* log_file);
 #endif // OUTPUT_H_

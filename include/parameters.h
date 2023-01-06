@@ -41,10 +41,12 @@
 #define NOISE_GYROSCOPE 0.001     // rad/s
 
 // Simulation parameters
-#define DT_S        0.001f   // discrete time step in seconds
-#define T_END_S     20.0f    // end of simulation time
+#define REALTIME_DT_S        0.001f   // discrete time step of the reality (simulated) in seconds
+#define REALTIME_T_END_S     20.0f    // end of time of reality (simulated) in seconds
 
 // Control parameters
+#define CTRL_DT_S           0.005f   // discrete time step of the controller in seconds
+#define CTRL_DT_SD_S        0.0002f  // standard deviation in noise in discrete time steps of the controller (no MCU is perfect) in seconds
 #define CTRL_PID_OMEGA_RPS  8.0f
 #define CTRL_PID_DAMPING    8.0f
 #define CTRL_PID_KP         POINT_MASS_KG * CTRL_PID_OMEGA_RPS*CTRL_PID_OMEGA_RPS/ENV_GRAVITY_MPS2
