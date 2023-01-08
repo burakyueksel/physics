@@ -62,3 +62,8 @@ make test
 ```sh
 ./main
 ```
+
+* Observe:
+
+    * the terminal output for the published variables. Notice that the altitude is controlled with a simple PID.
+    * the log.txt for the output of published variables.
