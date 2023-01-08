@@ -1,16 +1,16 @@
 /**
  * @author  Burak Yueksel
  * @date    29 December 2022
- * @brief   Outputting libraries
- * @addtogroup OUTPUT
+ * @brief   Publish libraries
+ * @addtogroup PUBLISH_H_
  **/
 
-#include "output.h"
+#include "publish.h"
 
 /* Prints the 3D vector to stdout.  Returns 0 if successful 
  * and -1 if vector is NULL.
  */
-int printVector3(vector3 vec3)
+int publishToTerminalVector3(vector3 vec3)
 {
   if (!vec3) return -1;
   
@@ -31,7 +31,7 @@ int printVector3(vector3 vec3)
 /* Prints the 4D quaternion vector to stdout.  Returns 0 if successful 
  * and -1 if mtx is NULL.
  */
-int printVectorQuaternion(quaternion* q)
+int publishToTerminalQuaternion(quaternion* q)
 {
   if (!q) return -1;
   
@@ -49,7 +49,7 @@ int printVectorQuaternion(quaternion* q)
 /* Prints the 3D euler angle vector to stdout.  Returns 0 if successful
  * and -1 if mtx is NULL.
  */
-int printVectorEuler(euler* e)
+int publishToTerminalEuler(euler* e)
 {
   if (!e) return -1;
 
@@ -64,7 +64,7 @@ int printVectorEuler(euler* e)
   return 0;
 }
 
-void writeScalarToLog(float time_s, float value, FILE* log_file)
+void publishToLogScalar(TelemetryID ID, float time_s, float value, FILE* log_file)
 {
-  fprintf(log_file, "%f %f\n", time_s, value);
+  fprintf(log_file, "%d %f %f\n", ID, time_s, value);
 }

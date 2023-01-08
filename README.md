@@ -25,6 +25,7 @@ General TODOs:
 * Add fixed-wing? Let's see.
 * Add actuator dynamics and their controls too.
 * Add random white noise to DT_S (discere time stamps) for technologies (e.g. controls, sensors, where time integration is done not by the reality but by computers, MCUs, etc).
+* Improve publish libraries. Add vector publishing too. Control publishing (and hence logging) rate.
 * Improve dynamics with aerodynamics, elasticity, and other factors.
 * Add controls library for controling the motion.
     * More advanced methods for aerial robotics (e.g. SE(3), quaternion based, etc).
