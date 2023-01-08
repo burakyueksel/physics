@@ -50,6 +50,7 @@ clean:
 	rm -f $(OBJS) $(TARGET) *~
 	$(RM) $(TEST_DIR)/*.o
 	$(RM) $(TEST_DIR)/*~
+	$(RM) log.txt
 
 test:
 	$(MAKE) -C $(TEST_DIR)
