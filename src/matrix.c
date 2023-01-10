@@ -249,13 +249,64 @@ int crossProduct3DVec(matrix * mtx1, matrix * mtx2, matrix * crossProd)
   return 0;
 }
 
+/* Hat operation: Writes the skew symmetric matrix from a 3D vector mtx
+ * hat operator allows moving from the real vector space to Lie algebra
+ * Returns 0 if successful, -1 if any of the
+ * vector or matrix are NULL, and -2 if the dimensions of the
+ * vector and matrix are incompatible and not 3x1 and 3x3
+ */
+int hat(matrix * vec3D, matrix * skewSymMtx)
+{
+  if (!vec3D || !skewSymMtx) return -1;
+  if (vec3D->cols != skewSymMtx->cols ||
+      skewSymMtx->cols != skewSymMtx->rows ||
+      vec3D->cols != 3 ||
+      vec3D->rows != 1)
+    return -2;
+
+  ELEM(skewSymMtx,1,1) = 0.0f;
+  ELEM(skewSymMtx,1,2) = -ELEM(vec3D,3,1);
+  ELEM(skewSymMtx,1,3) = ELEM(vec3D,2,1);
+  ELEM(skewSymMtx,2,1) = ELEM(vec3D,3,1);
+  ELEM(skewSymMtx,2,2) = 0.0f;
+  ELEM(skewSymMtx,2,3) = -ELEM(vec3D,1,1);
+  ELEM(skewSymMtx,3,1) = -ELEM(vec3D,2,1);
+  ELEM(skewSymMtx,3,2) = ELEM(vec3D,1,1);
+  ELEM(skewSymMtx,3,3) = 0.0f;
+
+  return 0;
+}
+
+/* Vee operation: Writes the vee vector from a 3D matrix mtx
+ * The Vee operator allows to move from the Lie algebra g to the real vector
+ * space of dimension equal to the one of the Lie algebra.
+ * Returns 0 if successful, -1 if any of the
+ * vector or matrix are NULL, and -2 if the dimensions of the
+ * vector and matrix are incompatible and not 3x1 and 3x3
+ */
+int vee(matrix * mtx, matrix * veeVec)
+{
+  if (!mtx || !veeVec) return -1;
+  if (mtx->cols != veeVec->rows ||
+      mtx->cols != mtx->rows ||
+      mtx->cols != 3 ||
+      veeVec->cols !=1)
+    return -2;
+
+  ELEM(veeVec,3,1) = ELEM(mtx,3,2);
+  ELEM(veeVec,3,2) = ELEM(mtx,1,3);
+  ELEM(veeVec,3,3) = ELEM(mtx,2,1);
+
+  return 0;
+}
+
 /* Writes the dot product of vectors v1 and v2 into 
  * reference prod.  Returns 0 if successful, -1 if any of
  * v1, v2, or prod are NULL, -2 if either matrix is not a 
  * vector, and -3 if the vectors are of incompatible 
  * dimensions.
  */
-int dotProductMatrix(matrix * v1, matrix * v2, float * prod)
+int dotProductVector(matrix * v1, matrix * v2, float * prod)
 {
   if (!v1 || !v2 || !prod) return -1;
   if (v1->cols != 1 || v2->cols != 1) return -2;
