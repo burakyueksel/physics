@@ -53,6 +53,7 @@ int productMatrix(matrix * mtx1, matrix * mtx2, matrix * prod);
 int crossProduct3DVec(matrix * mtx1, matrix * mtx2, matrix * crossProd);
 int hat(matrix * vec3D, matrix * skewSymMtx);
 int vee(matrix * mtx, matrix * veeVec);
+float normL2Vec(matrix * vec);
 int dotProductVector(matrix * v1, matrix * v2, float * prod);
 int identityMatrix(matrix * m);
 int isMatrixSquare(matrix * mtx);
