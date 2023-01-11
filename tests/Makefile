@@ -1,7 +1,7 @@
 LIBS	:= -I"../"
-SRC = testMath.c
+SRC = testMatrix.c
 OBJ = $(SRC:.c=.o)
-BIN = ./testMath
+BIN = ./testMatrix
 CFLAGS = -Wall -O2
 CFLAGS = $(LIBS)
 

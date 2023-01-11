@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h> // for sqrt
 
 /* Creates a ``rows by cols'' matrix with all values 0.  
  * Returns NULL if rows <= 0 or cols <= 0 and otherwise a
@@ -298,6 +299,20 @@ int vee(matrix * mtx, matrix * veeVec)
   ELEM(veeVec,3,3) = ELEM(mtx,2,1);
 
   return 0;
+}
+
+float normL2Vec(matrix * vec)
+{
+  if (!vec) return -1;
+  if (vec->cols !=1) return -2;
+  float sqrtSum = 0.0f;
+  int row;
+  for (row = 1; row <= vec->rows; row++)
+  {
+    sqrtSum += ELEM(vec, row, 1) * ELEM(vec, row, 1);
+  }
+  // return the L2 norm
+  return sqrt(sqrtSum);
 }
 
 /* Writes the dot product of vectors v1 and v2 into 

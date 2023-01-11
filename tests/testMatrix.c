@@ -5,7 +5,7 @@
  * @addtogroup TEST
  **/
 
-#include "matrix.h"
+#include "../include/matrix.h"
 
 int main() {
   matrix * A, * Ac, * B, * c, * d, * M, * ct, * mdp;
@@ -68,7 +68,7 @@ int main() {
   getMatrixElement(mdp, 1, 1, &dp);
   printf("\nDot product (1): %.2f\n", dp);
 
-  dotProductMatrix(c, d, &dp);
+  dotProductVector(c, d, &dp);
   printf("\nDot product (2): %.2f\n", dp);
 
   productMatrix(A, c, d);
