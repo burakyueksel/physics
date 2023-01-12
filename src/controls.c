@@ -81,21 +81,28 @@ void updateSE3Ctrl(SE3Controller *se3,
 
   // control thrust and its magnitude
 
-  //A = -kx*error_x - kv*error_v - m*g*e3 + m*ad;
+  //A = -kx*error_x - kv*error_v - m*g*e3 + m*ad
   matrix* A = newMatrix(3,1);
-  matrix* A1 = newMatrix(3,1);
-  matrix* A2 = newMatrix(3,1);
-  matrix* A3 = newMatrix(3,1);
-  matrix* A4 = newMatrix(3,1);
-  matrix* A12 = newMatrix(3,1);
-  matrix* A34 = newMatrix(3,1);
-  productMatrix(se3->kx, error_pos, A1);
-  productMatrix(se3->kv, error_pos, A2);
-  productScalarMatrix(POINT_MASS_KG*ENV_GRAVITY_MPS2, se3->e3, A3);
-  productScalarMatrix(POINT_MASS_KG, des_acc, A4);
-  sumMatrix(A1,A2,A12);
-  subtractMatrix(A4,A3,A34);
-  subtractMatrix(A34,A12,A);
+  matrix* kxex = newMatrix(3,1);
+  matrix* kvev = newMatrix(3,1);
+  matrix* mge3 = newMatrix(3,1);
+  matrix* mad = newMatrix(3,1);
+  matrix* xv = newMatrix(3,1);
+  matrix* mad_mge3 = newMatrix(3,1);
+  // kx*error_x
+  productMatrix(se3->kx, error_pos, kxex);
+  // kv*error_v
+  productMatrix(se3->kv, error_pos, kvev);
+  // m*g*e3
+  productScalarMatrix(POINT_MASS_KG*ENV_GRAVITY_MPS2, se3->e3, mge3);
+  // m*ad
+  productScalarMatrix(POINT_MASS_KG, des_acc, mad);
+  // + kx*error_x + kv*error_v
+  sumMatrix(kxex,kvev,xv);
+  // m*ad - m*g*e3
+  subtractMatrix(mad,mge3,mad_mge3);
+  // m*ad - m*g*e3 - kx*error_x - kv*error_v
+  subtractMatrix(mad_mge3,xv,A);
   //f = vec_dot(-A, R*e3); // equal to -transpose(A)*R*e3
   matrix* f     = newMatrix(3,1);
   matrix* AT    = newMatrix(3,1);
