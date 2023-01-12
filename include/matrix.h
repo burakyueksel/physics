@@ -61,6 +61,7 @@ int isMatrixDiagonal(matrix * mtx);
 int isMatrixUpperTriangular(matrix * mtx);
 int diagonalMatrix(matrix * v, matrix * mtx);
 int invertDiagonalMatrix(matrix* m, matrix* m_inv);
+int productScalarMatrix(float scalar, matrix* mtx, matrix* product);
 
 
 
