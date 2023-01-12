@@ -301,6 +301,8 @@ int vee(matrix * mtx, matrix * veeVec)
   return 0;
 }
 
+/* Compute the norm of a vector
+ */
 float normL2Vec(matrix * vec)
 {
   if (!vec) return -1;
@@ -334,6 +336,8 @@ int dotProductVector(matrix * v1, matrix * v2, float * prod)
   return 0;
 }
 
+/* Create an identity matrix
+ */
 int identityMatrix(matrix * m)
 {
   if (!m || m->rows != m->cols) return -1;
@@ -347,10 +351,15 @@ int identityMatrix(matrix * m)
   return 0;
 }
 
+/* check if a matrix is square
+ */
 int isMatrixSquare(matrix * mtx)
 {
   return mtx && mtx->rows == mtx->cols;
 }
+
+/* Check if a matrix is diagonal
+ */
 
 int isMatrixDiagonal(matrix * mtx)
 {
@@ -365,6 +374,8 @@ int isMatrixDiagonal(matrix * mtx)
   return 1;
 }
 
+/* Check if a matrix is upper triangular
+ */
 int isMatrixUpperTriangular(matrix * mtx)
 {
   if (!isMatrixSquare(mtx)) return 0;
@@ -377,6 +388,8 @@ int isMatrixUpperTriangular(matrix * mtx)
   return 1;
 }
 
+/* Create a diagonal matrix from a vector
+ */
 int diagonalMatrix(matrix * v, matrix * mtx)
 {
   if (!v || !mtx ||
@@ -393,14 +406,16 @@ int diagonalMatrix(matrix * v, matrix * mtx)
   return 0;
 }
 
+/* invert a diagonal matrix
+ */
 int invertDiagonalMatrix(matrix* m, matrix* m_inv)
 {
   // do m and m_inv exist?
-  if (!m || !m_inv) return -2;
+  if (!m || !m_inv) return -3;
   // m and m_inv must have the same dimensions
-  if (m->rows != m_inv->rows || m->cols != m_inv->cols) return -1;
+  if (m->rows != m_inv->rows || m->cols != m_inv->cols) return -2;
   // matrix needs to be diagonal for this function
-  if (!isMatrixDiagonal(m)) return 0;
+  if (!isMatrixDiagonal(m)) return -1;
 
   int row, col;
   for (col = 1; col <= m_inv->cols; col++)
@@ -409,6 +424,23 @@ int invertDiagonalMatrix(matrix* m, matrix* m_inv)
         ELEM(m_inv, row, col) = 1/ELEM(m, row, col);
       else
         ELEM(m_inv, row, col) = 0.0;
+  return 0;
+}
+
+/* Compute the product of a matrix (or vector) with a scalar
+ */
+int productScalarMatrix(float scalar, matrix* mtx, matrix* product)
+{
+  // do the inputs even exist?
+  if (!scalar || !mtx) return -2;
+  // mtx and product must have the same dimensions
+  if (mtx->rows != product->rows || mtx->cols != product->cols) return -1;
+
+  int row, col;
+  for (col = 1; col <= product->cols; col++)
+    for (row = 1; row <= product->rows; row++)
+      if (row == col)
+      ELEM(product, row, col) = scalar * ELEM(mtx, row, col);
   return 0;
 }
 
