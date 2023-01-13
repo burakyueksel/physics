@@ -100,6 +100,31 @@ int getMatrixElement(matrix * mtx, int row, int col, float * val)
   return 0;
 }
 
+/* matrix concatenation into a matrix
+ * m_conv = [mtx1 mtx2]
+ * Returns 0 if successful, -1 if any of the matrices/vectors
+ * are NULL, and -2 if the dimensions of the matrices are
+ * incompatible.
+ */
+
+int matrixConcatenation (matrix* mtx1, matrix* mtx2, matrix* m_conv)
+{
+  if (!mtx1 || !mtx2 || !m_conv) return -1;
+  if (mtx1->rows != mtx2->rows ||
+     (mtx1->cols + mtx1->cols) != m_conv->cols ||
+      mtx1->rows != m_conv->rows)
+    return -2;
+  int row, col;
+  for (col = 1; col <= m_conv->cols; col++)
+    for (row = 1; row <= m_conv->rows; row++)
+      if (col <= mtx1->cols)
+        ELEM(m_conv, row, col) = ELEM(mtx1, row, col);
+      else
+        ELEM(m_conv, row, col) = ELEM(mtx2, row, (col-mtx1->cols));
+
+  return 0;
+}
+
 /* Sets the reference n to the number of rows of mtx.
  * Returns 0 if successful and -1 if mtx or n is NULL.
  */
