@@ -132,6 +132,34 @@ void updateSE3Ctrl(SE3Controller *se3,
   setMatrixElement(b1_d_ddot,  2,  1,  (cs_yref*yawRefdDot - sn_yref*yawRefDot_square));
   setMatrixElement(b1_d_ddot,  3,  1,  0.0f);
 
+  /*Now we are going to construct the desired/control rotation matrix
+    direction of the thrust vector (desired/control)
+    aka body z direction
+  */
+  float normA = normL2Vec(A);
+  matrix* b3_c = newMatrix(3,1);
+  productScalarMatrix(-1/normA, A, b3_c);
+  /*vector orthogonal to thrust direction and desired heading.
+    this is directing to y axis
+  */
+  matrix* C = newMatrix(3,1);
+  crossProduct3DVec(b3_c, b1_d, C);
+  /*orthonormal desired body y direction
+  */
+  matrix* b2_c = newMatrix(3,1);
+  float normC = normL2Vec(C);
+  productScalarMatrix(1/normC, C, b2_c);
+  /*orthonormal desired body x direction
+  */
+  matrix* b1_c = newMatrix(3,1);
+  crossProduct3DVec(b2_c, b3_c, b1_c);
+  /*construct the rotation matrix to be tracked: R_c = [b1_c b2_c b3_c]
+  */
+  matrix* R_c = newMatrix(3,3);
+  matrix* R_c_23 = newMatrix(3,2);
+  matrixConcatenation(b2_c, b3_c, R_c_23);
+  matrixConcatenation(b1_c, R_c_23, R_c);
+
   // TODO: to be cont.
 }
 

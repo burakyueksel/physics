@@ -43,6 +43,7 @@ int deleteMatrix(matrix * mtx);
 matrix * copyMatrix(matrix * mtx);
 int setMatrixElement(matrix * mtx, int row, int col, float val);
 int getMatrixElement(matrix * mtx, int row, int col, float * val);
+int matrixConcatenation(matrix* mtx1, matrix* mtx2, matrix* m_conv);
 int nRows(matrix * mtx, int * n);
 int nCols(matrix * mtx, int * n);
 int printMatrix(matrix * mtx);

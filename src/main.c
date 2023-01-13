@@ -87,7 +87,28 @@ int main ()
         //publishToTerminalVector3(realStates->trState.pos_Inertial_m); // gives same result as using the global
         publishToTerminalEuler(&g_phsicsPointStates.rtState.euler_r);
 
+/*
+        // test script. To be removed.
+        matrix * A, * B, * C;
+        A = newMatrix(3, 3);
+        C = newMatrix(3,6);
+        setMatrixElement(A, 1, 1, 1.0);
+        setMatrixElement(A, 1, 2, .25);
+        setMatrixElement(A, 1, 3, -.1);
+        setMatrixElement(A, 2, 2, .4);
+        setMatrixElement(A, 2, 3, .3);
+        setMatrixElement(A, 3, 2, .1);
+        setMatrixElement(A, 3, 3, -.3);
+        printf("Matrix A:\n");
+        printMatrix(A);
+        B = copyMatrix(A);
 
+        matrixConcatenation(A, B, C);
+        printf("Matrix B:\n");
+        printMatrix(B);
+        printf("Matrix C:\n");
+        printMatrix(C);
+*/
     }
     // close the logging file
     fclose(log_file);
