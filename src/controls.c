@@ -160,6 +160,21 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrixConcatenation(b2_c, b3_c, R_c_23);
   matrixConcatenation(b1_c, R_c_23, R_c);
 
+  /*time derivatives of body axes for excessive attitude tracking performances
+  A_dot   = -kx*error_v - kv*error_a + m*jd;
+  */
+  matrix* Adot = newMatrix(3,1);
+  matrix* mjd = newMatrix(3,1);
+  matrix* kvea = newMatrix(3,1);
+  matrix* kxev = newMatrix(3,1);
+  matrix* va = newMatrix(3,1);
+
+  productScalarMatrix(POINT_MASS_KG,des_jerk,mjd);
+  productMatrix(se3->kv, error_acc, kvea);
+  productMatrix(se3->kx, error_vel, kxev);
+  sumMatrix(kxev, kvea, va);
+  subtractMatrix(mjd, va, Adot);
+
   // TODO: to be cont.
 }
 
