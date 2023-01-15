@@ -38,7 +38,7 @@ float updatePID(PIDController *pid, float error, float dt);
 void initSE3Ctrl(SE3Controller *se3);
 void updateSE3Ctrl(SE3Controller *se3,
                     matrix* des_pos, matrix* des_vel, matrix* des_acc, matrix* des_jerk,
-                    matrix* pos, matrix* vel, matrix* acc, matrix* jerk,
+                    matrix* pos, matrix* vel, matrix* acc, matrix* jerk, matrix* des_snap,
                     matrix* R, matrix* rotVel,
                     float yawRef, float yawRefDot, float yawRefdDot);
 
