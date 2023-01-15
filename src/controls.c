@@ -175,7 +175,25 @@ void updateSE3Ctrl(SE3Controller *se3,
   sumMatrix(kxev, kvea, va);
   subtractMatrix(mjd, va, Adot);
 
+  /*time derivative of body z*
+  b3_c_dot = -A_dot/norm(A) + (vec_dot(A,A_dot)/norm(A)^3)*A;
+  */
+  float normACube = normA*normA*normA;
+  matrix* AdotNormd = newMatrix(3,1);
+  matrix* ATAdot = newMatrix(3,1);
+  matrix* ATAdotNormd3 = newMatrix(3,1);
+  matrix* ATAdotNormd3A = newMatrix(3,1);
+  matrix* b3_c_dot = newMatrix(3,1);
+
+  productScalarMatrix(-normA, Adot, AdotNormd);
+  productMatrix(AT,Adot,ATAdot);
+  productScalarMatrix(1/normACube,ATAdot,ATAdotNormd3);
+  productMatrix(ATAdotNormd3,A,ATAdotNormd3A);
+
+  sumMatrix(AdotNormd, ATAdotNormd3A, b3_c_dot);
+
   // TODO: to be cont.
+  // delete all created matrices at the end
 }
 
 /*
