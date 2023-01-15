@@ -185,12 +185,51 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrix* ATAdotNormd3A = newMatrix(3,1);
   matrix* b3_c_dot = newMatrix(3,1);
 
-  productScalarMatrix(-normA, Adot, AdotNormd);
+  productScalarMatrix(-1/normA, Adot, AdotNormd);
   productMatrix(AT,Adot,ATAdot);
   productScalarMatrix(1/normACube,ATAdot,ATAdotNormd3);
   productMatrix(ATAdotNormd3,A,ATAdotNormd3A);
-
   sumMatrix(AdotNormd, ATAdotNormd3A, b3_c_dot);
+
+  /*
+  C_dot   = vec_cross(b3_c_dot, b1_d) + vec_cross(b3_c, b1_d_dot);
+  */
+  matrix* b3cdotXb1d = newMatrix(3,1);
+  matrix* b3cXb1ddot = newMatrix(3,1);
+  matrix* C_dot = newMatrix(3,1);
+
+  crossProduct3DVec(b3_c_dot, b1_d, b3cdotXb1d);
+  crossProduct3DVec(b3_c, b1_d_dot, b3cXb1ddot);
+  sumMatrix(b3cdotXb1d,b3cXb1ddot,C_dot);
+
+  /*time derivative of body y
+    b2_c_dot = C/norm(C) - (vec_dot(C,C_dot)/norm(C)^3)*C;
+  */
+ float normCCube = normC*normC*normC;
+  matrix* CT     = newMatrix(3,1);
+  matrix* CNormd = newMatrix(3,1);
+  matrix* CTCdot = newMatrix(3,1);
+  matrix* CTCdotNormd3 = newMatrix(3,1);
+  matrix* CTCdotNormd3C = newMatrix(3,1);
+  matrix* b2_c_dot = newMatrix(3,1);
+
+  transposeMatrix(C, CT);
+  productScalarMatrix(1/normC, C, CNormd);
+  productMatrix(CT,C_dot,CTCdot);
+  productScalarMatrix(-1/normCCube,CTCdot,CTCdotNormd3);
+  productMatrix(CTCdotNormd3,C,CTCdotNormd3C);
+  sumMatrix(CNormd, CTCdotNormd3C, b2_c_dot);
+
+  /*time derivative of body x
+    b1_c_dot = vec_cross(b2_c_dot, b3_c) + vec_cross(b2_c, b3_c_dot);
+  */
+  matrix* b2cdotXb3c = newMatrix(3,1);
+  matrix* b2cXb3cdot = newMatrix(3,1);
+  matrix* b1_c_dot = newMatrix(3,1);
+
+  crossProduct3DVec(b2_c_dot, b3_c, b2cdotXb3c);
+  crossProduct3DVec(b2_c, b3_c_dot, b2cXb3cdot);
+  sumMatrix(b2cdotXb3c,b2cXb3cdot, b1_c_dot);
 
   // TODO: to be cont.
   // delete all created matrices at the end

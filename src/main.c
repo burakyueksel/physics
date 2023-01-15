@@ -11,8 +11,11 @@
 #include "physics.h"
 #include "sensors.h"
 #include <unistd.h> // for usleep function  
+#include <time.h> // for clock() fcn for measuring the clock ticks that have elapsed
 
 extern float g_time_s;
+clock_t start, end;
+float cpu_time_used;
 
 int main ()
 {
@@ -30,6 +33,8 @@ int main ()
     // run the time loop (constant dt_sec, i.e. discrete time)
     while (g_time_s<=REALTIME_T_END_S)
     {
+        start = clock();
+
         realStates = &g_phsicsPointStates;
 
         // Call barometer for the altitude
@@ -109,6 +114,11 @@ int main ()
         printf("Matrix C:\n");
         printMatrix(C);
 */
+
+
+    end = clock();
+    cpu_time_used = ((float) (end - start)) / CLOCKS_PER_SEC;
+    printf("Time taken by function: %f seconds.\n", cpu_time_used);
     }
     // close the logging file
     fclose(log_file);
