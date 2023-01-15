@@ -468,6 +468,78 @@ int productScalarMatrix(float scalar, matrix* mtx, matrix* product)
       ELEM(product, row, col) = scalar * ELEM(mtx, row, col);
   return 0;
 }
+/*
+
+// function to find the inverse of a matrix using LU decomposition
+void inverse(double A[N][N], double inverse[N][N])
+{
+    double L[N][N], U[N][N];
+    double y[N], x[N];
+    double b[N],z[N];
+    int i, j, k;
+    double det = 1;
+
+    // LU decomposition
+    for (i = 0; i < N; i++)
+    {
+        for (j = 0; j < N; j++)
+        {
+            U[i][j] = A[i][j];
+            if (i > j)
+                L[i][j] = 0;
+            else
+                L[i][j] = 1;
+        }
+    }
+
+    for (k = 0; k < N; k++)
+    {
+        for (i = k + 1; i < N; i++)
+        {
+            L[i][k] = U[i][k] / U[k][k];
+            for (j = k; j < N; j++)
+                U[i][j] = U[i][j] - L[i][k] * U[k][j];
+        }
+    }
+
+    // find the determinant of A
+    for (i = 0; i < N; i++)
+        det = det * L[i][i] * U[i][i];
+
+    // find the inverse of A
+    for (j = 0; j < N; j++)
+    {
+        for (i = 0; i < N; i++)
+        {
+            if (i == j)
+                b[i] = 1;
+            else
+                b[i] = 0;
+        }
+
+        // forward substitution
+        for (i = 0; i < N; i++)
+        {
+            y[i] = b[i];
+            for (k = 0; k < i; k++)
+                y[i] = y[i] - L[i][k] * y[k];
+        }
+
+        // backward substitution
+        for (i = N - 1; i >= 0; i--)
+        {
+            z[i] = y[i];
+            for (k = i + 1; k < N; k++)
+                z[i] = z[i] - U[i][k] * z[k];
+            x[i] = z[i] / U[i][i];
+        }
+
+        // store the result in inverse matrix
+        for (i = 0; i < N; i++)
+            inverse[i][j] = x[i];
+    }
+}
+*/
 
 /*
 

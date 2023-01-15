@@ -62,7 +62,7 @@ void initSE3Ctrl(SE3Controller *se3)
 }
 
 void updateSE3Ctrl(SE3Controller *se3,
-                    matrix* des_pos, matrix* des_vel, matrix* des_acc, matrix* des_jerk,
+                    matrix* des_pos, matrix* des_vel, matrix* des_acc, matrix* des_jerk, matrix* des_snap,
                     matrix* pos, matrix* vel, matrix* acc, matrix* jerk,
                     matrix* R, matrix* rotVel,
                     float yawRef, float yawRefDot, float yawRefdDot)
@@ -230,6 +230,21 @@ void updateSE3Ctrl(SE3Controller *se3,
   crossProduct3DVec(b2_c_dot, b3_c, b2cdotXb3c);
   crossProduct3DVec(b2_c, b3_c_dot, b2cXb3cdot);
   sumMatrix(b2cdotXb3c,b2cXb3cdot, b1_c_dot);
+
+  /* second time derivatives of body axes
+  A_ddot   = -kx*error_a - kv*error_j + m*sd;
+  */
+  matrix* A_ddot = newMatrix(3,1);
+  matrix* msd    = newMatrix(3,1);
+  matrix* kxea   = newMatrix(3,1);
+  matrix* kvej   = newMatrix(3,1);
+  matrix* aj     = newMatrix(3,1);
+
+  productScalarMatrix(POINT_MASS_KG, des_snap, msd);
+  productMatrix(se3->kx,error_acc,kxea);
+  productMatrix(se3->kv,error_jerk,kvej);
+  sumMatrix(kxea,kvej,aj);
+  subtractMatrix(msd,aj,A_ddot);
 
   // TODO: to be cont.
   // delete all created matrices at the end
