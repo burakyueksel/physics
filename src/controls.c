@@ -180,8 +180,8 @@ void updateSE3Ctrl(SE3Controller *se3,
   */
   float normACube = normA*normA*normA;
   matrix* AdotNormd = newMatrix(3,1);
-  matrix* ATAdot = newMatrix(3,1);
-  matrix* ATAdotNormd3 = newMatrix(3,1);
+  matrix* ATAdot = newMatrix(1,1);
+  matrix* ATAdotNormd3 = newMatrix(1,1);
   matrix* ATAdotNormd3A = newMatrix(3,1);
   matrix* b3_c_dot = newMatrix(3,1);
 
@@ -208,8 +208,8 @@ void updateSE3Ctrl(SE3Controller *se3,
  float normCCube = normC*normC*normC;
   matrix* CT     = newMatrix(3,1);
   matrix* CNormd = newMatrix(3,1);
-  matrix* CTCdot = newMatrix(3,1);
-  matrix* CTCdotNormd3 = newMatrix(3,1);
+  matrix* CTCdot = newMatrix(1,1);
+  matrix* CTCdotNormd3 = newMatrix(1,1);
   matrix* CTCdotNormd3C = newMatrix(3,1);
   matrix* b2_c_dot = newMatrix(3,1);
 
@@ -246,6 +246,20 @@ void updateSE3Ctrl(SE3Controller *se3,
   sumMatrix(kxea,kvej,aj);
   subtractMatrix(msd,aj,A_ddot);
 
+  /* second time derivative of body z
+  b3_c_ddot = -A_ddot/norm(A) + (2/norm(A)^3)*vec_dot(A,A_dot)*A_dot ...
+         + ((norm(A_dot)^2 + vec_dot(A,A_ddot))/norm(A)^3)*A       ...
+         - (3/norm(A)^5)*(vec_dot(A,A_dot)^2)*A;
+  */
+ float normASquared = normA*normA;
+ float normA5       = normASquared*normACube;
+ matrix* AddotNormd = newMatrix(3,1);
+ matrix* ATAdotAdot = newMatrix(3,1);
+ matrix* b3_c_ddot_2ndTerm = newMatrix(3,1);
+
+ productScalarMatrix(-1/normA, A_ddot,AddotNormd);
+ productMatrix(ATAdot,Adot,ATAdotAdot);
+ productScalarMatrix(2/normACube,ATAdotAdot,b3_c_ddot_2ndTerm);
   // TODO: to be cont.
   // delete all created matrices at the end
 }
