@@ -468,6 +468,100 @@ int productScalarMatrix(float scalar, matrix* mtx, matrix* product)
       ELEM(product, row, col) = scalar * ELEM(mtx, row, col);
   return 0;
 }
+
+
+/*
+   Cholesky-decomposition matrix-inversion code, adapated from
+   http://jean-pierre.moreau.pagesperso-orange.fr/Cplus/choles_cpp.txt
+  source: https://github.com/simondlevy/TinyEKF/blob/master/src/tiny_ekf.c
+
+  Notice that cholesky-decomposition does matrix inversion only to positive definite Hermitian matrices.
+  This means symmetric positive definite matrices when all components of the matrix are real numbers.
+  Example to such matrices:
+  - Moment of inertia
+  - Covariance matrices
+
+  Usage:
+  if (cholsl(posDefSymmMatrix, inverseOfMatrix, tempValue, dimensionOfMatrix)) return 1;
+
+static int choldc1(double * a, double * p, int n) {
+    int i,j,k;
+    double sum;
+
+    for (i = 0; i < n; i++) {
+        for (j = i; j < n; j++) {
+            sum = a[i*n+j];
+            for (k = i - 1; k >= 0; k--) {
+                sum -= a[i*n+k] * a[j*n+k];
+            }
+            if (i == j) {
+                if (sum <= 0) {
+                    return 1; // error
+                }
+                p[i] = sqrt(sum);
+            }
+            else {
+                a[j*n+i] = sum / p[i];
+            }
+        }
+    }
+
+    return 0; // success
+}
+
+static int choldcsl(double * A, double * a, double * p, int n) 
+{
+    int i,j,k; double sum;
+    for (i = 0; i < n; i++) 
+        for (j = 0; j < n; j++) 
+            a[i*n+j] = A[i*n+j];
+    if (choldc1(a, p, n)) return 1;
+    for (i = 0; i < n; i++) {
+        a[i*n+i] = 1 / p[i];
+        for (j = i + 1; j < n; j++) {
+            sum = 0;
+            for (k = i; k < j; k++) {
+                sum -= a[j*n+k] * a[k*n+i];
+            }
+            a[j*n+i] = sum / p[j];
+        }
+    }
+
+    return 0; // success
+}
+
+
+static int cholsl(double * A, double * a, double * p, int n) 
+{
+    int i,j,k;
+    if (choldcsl(A,a,p,n)) return 1;
+    for (i = 0; i < n; i++) {
+        for (j = i + 1; j < n; j++) {
+            a[i*n+j] = 0.0;
+        }
+    }
+    for (i = 0; i < n; i++) {
+        a[i*n+i] *= a[i*n+i];
+        for (k = i + 1; k < n; k++) {
+            a[i*n+i] += a[k*n+i] * a[k*n+i];
+        }
+        for (j = i + 1; j < n; j++) {
+            for (k = j; k < n; k++) {
+                a[i*n+j] += a[k*n+i] * a[k*n+j];
+            }
+        }
+    }
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < i; j++) {
+            a[i*n+j] = a[j*n+i];
+        }
+    }
+
+    return 0; // success
+}
+
+*/
+
 /*
 
 // function to find the inverse of a matrix using LU decomposition
