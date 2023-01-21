@@ -92,6 +92,13 @@ int main ()
         //publishToTerminalVector3(realStates->trState.pos_Inertial_m); // gives same result as using the global
         publishToTerminalEuler(&g_phsicsPointStates.rtState.euler_r);
 
+        matrix* L = newMatrix(3,3);
+        coleskyDecomp(g_physicsPointObj.I_kgm2, L);
+        printf("Matrix I:\n");
+        printMatrix(g_physicsPointObj.I_kgm2);
+        printf("Matrix L:\n");
+        printMatrix(L);
+
 /*
         // test script. To be removed.
         matrix * A, * B, * C;
