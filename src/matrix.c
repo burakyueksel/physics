@@ -438,7 +438,7 @@ int invertDiagonalMatrix(matrix* m, matrix* m_inv)
   // do m and m_inv exist?
   if (!m || !m_inv) return -3;
   // m and m_inv must have the same dimensions
-  if (m->rows != m_inv->rows || m->cols != m_inv->cols) return -2;
+  if (!isSameDimension(m, m_inv))  return -2;
   // matrix needs to be diagonal for this function
   if (!isMatrixDiagonal(m)) return -1;
 
@@ -450,6 +450,16 @@ int invertDiagonalMatrix(matrix* m, matrix* m_inv)
       else
         ELEM(m_inv, row, col) = 0.0;
   return 0;
+}
+
+int isSameDimension(matrix* mtx1, matrix* mtx2)
+{
+  // do m and m_inv exist?
+  if (!mtx1 || !mtx1) return -1;
+  // m and m_inv must have the same dimensions
+  if (mtx1->rows != mtx2->rows || mtx1->cols != mtx2->cols) return 0;
+  // looks good
+  return 1;
 }
 
 /* Compute the product of a matrix (or vector) with a scalar
@@ -468,6 +478,117 @@ int productScalarMatrix(float scalar, matrix* mtx, matrix* product)
       ELEM(product, row, col) = scalar * ELEM(mtx, row, col);
   return 0;
 }
+int coleskyDecomp(matrix* A, matrix* L)
+{
+  // do the inputs even exist?
+  if (!A || !L) return -2;
+  // are the matrices square?
+  if (!isMatrixSquare(A) || !isMatrixSquare(L)) return -1;
+  // are the matrices of the same dimension?
+  if (!isSameDimension(A, L)) return 0;
+  // TODO: add a check if A is posdef AND symmetric
+  int row, col, k;
+  float sum;
+  for (col = 1; col<=L->cols; col++)
+  {
+    for (row = 1; row<=L->rows; row++)
+    {
+      sum = 0;
+      if (col==row)
+      {
+        for (k=0; k<=row; k++)
+        {
+          sum += ELEM(L, row, k) * ELEM(L, row, k);
+        }
+        ELEM(L, row, col) = sqrt(ELEM(A, row, col) - sum);
+      }
+      else
+      {
+        for (k=0; k<=row; k++)
+        {
+          sum += ELEM(L, row, k) * ELEM(L, col, k);
+        }
+        ELEM(L, row, col) = (ELEM(A, row, col) - sum) / ELEM(L, col, col);
+      }
+    }
+  }
+  return 1; // success
+}
+
+/*
+// An alternative using cholesky
+
+// Function to perform Cholesky decomposition
+void choleskyDecomposition(int n, double a[n][n], double L[n][n]) {
+    int i, j, k;
+    // i: row, j: column
+    double sum;
+    for (i = 0; i < n; i++) {
+        for (j = 0; j <= i; j++) {
+            sum = 0;
+            if (i == j) {
+                for (k = 0; k < j; k++) {
+                    sum += L[j][k] * L[j][k];
+                }
+                L[j][j] = sqrt(a[j][j] - sum);
+            } else {
+                for (k = 0; k < j; k++) {
+                    sum += L[i][k] * L[j][k];
+                }
+                L[i][j] = (a[i][j] - sum) / L[j][j];
+            }
+        }
+    }
+}
+
+// Function to compute the inverse of a matrix using Cholesky decomposition
+void inverse(int n, double a[n][n], double inverse[n][n]) {
+    double L[n][n], LT[n][n], y[n], x[n];
+    int i, j, k;
+    double sum;
+    choleskyDecomposition(n, a, L);
+    // Compute the transpose of L
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            LT[i][j] = L[j][i];
+        }
+    }
+    // Solve L*y = I for y using forward substitution
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            if (i == j) {
+                y[i] = 1 / L[i][i];
+            } else {
+                sum = 0;
+                for (k = 0; k < i; k++) {
+                    sum += L[i][k] * y[k];
+                }
+                y[i] = (1 - sum) / L[i][i];
+            }
+        }
+    }
+    // Solve LT*x = y for x using backward substitution
+    for (i = n - 1; i >= 0; i--) {
+        for (j = n - 1; j >= 0; j--) {
+            if (i == j) {
+                x[i] = y[i] / LT[i][i];
+            } else {
+                sum = 0;
+                for (k = n - 1; k > i; k--) {
+                    sum += LT[i][k] * x[k];
+                }
+                x[i] = (y[i] - sum) / LT[i][i];
+            }
+        }
+    }
+    // Store the result in the inverse matrix
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
+            inverse[i][j] = x[i] * y[j];
+        }
+    }
+}
+*/
 
 
 /*

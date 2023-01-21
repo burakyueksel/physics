@@ -62,8 +62,9 @@ int isMatrixDiagonal(matrix * mtx);
 int isMatrixUpperTriangular(matrix * mtx);
 int diagonalMatrix(matrix * v, matrix * mtx);
 int invertDiagonalMatrix(matrix* m, matrix* m_inv);
+int isSameDimension(matrix* mtx1, matrix* mtx2);
 int productScalarMatrix(float scalar, matrix* mtx, matrix* product);
-
+int coleskyDecomp(matrix* A, matrix* L);
 
 
 #endif // MATRIX_H_
