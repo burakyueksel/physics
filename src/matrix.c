@@ -480,6 +480,8 @@ int productScalarMatrix(float scalar, matrix* mtx, matrix* product)
 }
 int coleskyDecomp(matrix* A, matrix* L)
 {
+  /* source1: https://rosettacode.org/wiki/Cholesky_decomposition#C
+   * source2 : https://en.wikipedia.org/wiki/Cholesky_decomposition*/
   // do the inputs even exist?
   if (!A || !L) return -2;
   // are the matrices square?
@@ -489,14 +491,14 @@ int coleskyDecomp(matrix* A, matrix* L)
   // TODO: add a check if A is posdef AND symmetric
   int row, col, k;
   float sum;
-  for (col = 1; col<=L->cols; col++)
+  for (row = 1; row<=L->rows; row++)
   {
-    for (row = 1; row<=L->rows; row++)
+    for (col = 1; col<=row; col++)
     {
       sum = 0;
       if (col==row)
       {
-        for (k=0; k<=row; k++)
+        for (k=1; k<row; k++)
         {
           sum += ELEM(L, row, k) * ELEM(L, row, k);
         }
@@ -504,7 +506,7 @@ int coleskyDecomp(matrix* A, matrix* L)
       }
       else
       {
-        for (k=0; k<=row; k++)
+        for (k=1; k<row; k++)
         {
           sum += ELEM(L, row, k) * ELEM(L, col, k);
         }

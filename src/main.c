@@ -92,15 +92,29 @@ int main ()
         //publishToTerminalVector3(realStates->trState.pos_Inertial_m); // gives same result as using the global
         publishToTerminalEuler(&g_phsicsPointStates.rtState.euler_r);
 
+        /*
+        // test script for cholesky decomposition
         matrix* L = newMatrix(3,3);
-        coleskyDecomp(g_physicsPointObj.I_kgm2, L);
+        matrix* A = newMatrix(3,3);
+        // chose A matrix from the example here: https://rosettacode.org/wiki/Cholesky_decomposition#C
+        setMatrixElement(A, 1, 1, 25);
+        setMatrixElement(A, 1, 2, 15);
+        setMatrixElement(A, 1, 3, -5);
+        setMatrixElement(A, 2, 1, 15);
+        setMatrixElement(A, 2, 2, 18);
+        setMatrixElement(A, 2, 3, 0);
+        setMatrixElement(A, 3, 1, -5);
+        setMatrixElement(A, 3, 2, 0);
+        setMatrixElement(A, 3, 3, 11);
+        coleskyDecomp(A, L);
         printf("Matrix I:\n");
-        printMatrix(g_physicsPointObj.I_kgm2);
+        printMatrix(A);
         printf("Matrix L:\n");
         printMatrix(L);
+        */
 
 /*
-        // test script. To be removed.
+        // test script for matrixConc. To be removed.
         matrix * A, * B, * C;
         A = newMatrix(3, 3);
         C = newMatrix(3,6);
