@@ -159,7 +159,7 @@ int printMatrix(matrix * mtx)
       //  - either a - if negative or a space if positive
       //  - at least 3 spaces before the .
       //  - precision to the hundredths place
-      printf("% 6.2f ", ELEM(mtx, row, col));
+      printf("% 6.6f ", ELEM(mtx, row, col));
     }
     // separate rows by newlines
     printf("\n");
@@ -478,6 +478,13 @@ int productScalarMatrix(float scalar, matrix* mtx, matrix* product)
       ELEM(product, row, col) = scalar * ELEM(mtx, row, col);
   return 0;
 }
+
+/** @brief Compute Cholesky Decomposition of matrix A.
+ *  A is a Hermitian, positive-definite. Meaning when its elements are all real numbers,
+ *  it is positive definite symmetric matrix.
+ *  Then we can write A = L*L^T (cholesky decpmposition), where L is a lower triangular matrix
+ *  and L^T is its transpose, which is an upper triangular matrix.
+ */
 int coleskyDecomp(matrix* A, matrix* L)
 {
   /* source1: https://rosettacode.org/wiki/Cholesky_decomposition#C
@@ -515,6 +522,126 @@ int coleskyDecomp(matrix* A, matrix* L)
     }
   }
   return 1; // success
+}
+
+int choleskyFwdSolve(matrix* L, matrix* y)
+{
+  int row, col, k;
+  float sum;
+  for (row = 1; row <=L->rows; row++)
+  {
+    for (col = 1; col <= L->cols; col++)
+    {
+      if (row == col)
+      {
+        ELEM(y, row, 1) = 1 / ELEM(L, row, row);
+      }
+      else
+      {
+        sum = 0;
+        for (k = 1; k <= row; k++)
+        {
+          sum += ELEM(L, row, k) * ELEM(y, k, 1);
+        }
+        ELEM(y, row, 1) = (1 - sum) / ELEM(L, row, row);
+      }
+    }
+  }
+  return 1; // success
+}
+
+/*
+  // Solve LT*x = y for x using backward substitution
+*/
+int choleskyBckSolve(matrix* LT, matrix* y, matrix* x)
+{
+  int row, col, k;
+  float sum;
+  for (row = LT->rows; row >= 1; row--)
+  {
+    for (col = LT->cols; col >= 1; col--)
+    {
+      if (row == col)
+      {
+          ELEM(x, row, 1)= ELEM(y, row, 1) / ELEM(LT, row, row);
+      }
+      else
+      {
+        sum = 0;
+        for (k = LT->cols; k >= row; k--)
+        {
+          sum += ELEM(LT, row, k) * ELEM(x, k, 1);
+        }
+        ELEM(x, row, 1) = (ELEM(y, row, 1) - sum) / ELEM(LT, row, row);
+      }
+    }
+  }
+  return 1; // success
+}
+
+/*
+  // Store the result in the inverse matrix
+*/
+int choleskyStore(matrix* Ainv, matrix* x, matrix* y)
+{
+  int row, col;
+  for (row = 1; row <=Ainv->rows; row++)
+  {
+    for (col = 1; col <=Ainv->cols; col++)
+    {
+        ELEM(Ainv, row, col) = ELEM(x, row, 1) * ELEM(y, col, 1);
+    }
+  }
+  return 1; // success
+}
+
+/** @brief Compute inverse of a matrix A using cholesky decomposition
+ *  This only wroks when A is a Hermitian, positive-definite. Meaning when its elements are all real numbers,
+ *  it is positive definite symmetric matrix.
+ *  Then we can write A = L*L^T (cholesky decpmposition), where L is a lower triangular matrix
+ *  and L^T is its transpose, which is an upper triangular matrix.
+ *
+ *  It inverse is then A^-1 = (LL^T)^-1 = L^-T L^-1
+ *  Now, using the property of triangular matrix inversion, we know that L^-1 and L^-T can be obtained
+ *  by solving the following systems of equations:
+ *  1. Lx = I, where x is L^-1 and I is the identity matrix
+ *  2. L^Tx = x, where x is L^-1
+ *  We can solve these system of equation using forward and backward substitution respectively.
+ *
+ *  Notice that this will only work when A is positive definite and symmetric.
+ *  Daily life (of an engineer working in robotics, aviation, etc) examples for A:
+ *  -> Moment of Inertia
+ *  -> Inertia Matrix
+ *  -> Covariance matrix (Kalman Filter)
+ */
+int inverseMatrixChol(matrix* A, matrix* Ainv)
+{
+  // do the inputs even exist?
+  if (!A || !Ainv) return -2;
+  // are the matrices square?
+  if (!isMatrixSquare(A) || !isMatrixSquare(Ainv)) return -1;
+  // are the matrices of the same dimension?
+  if (!isSameDimension(A, Ainv)) return 0;
+  // TODO: add a check if A is posdef AND symmetric
+  //
+  // create x and y vectors for backward and forward substitution
+  matrix* x = newMatrix(A->rows, 1);
+  matrix* y = copyMatrix(x);
+  // create an empty matrix for cholesky decomposition, in the same dimension of A
+  matrix* L = newMatrix(A->rows, A->cols);
+  // create an empty matrix, which will be the transpose of L
+  matrix* LT= copyMatrix(L);
+  // compute the cholesky decomposition of A, which is L
+  coleskyDecomp(A, L);
+  // compute the transpose of L
+  transposeMatrix(L,LT);
+  // Solve L*y = I for y using forward substitution
+  choleskyFwdSolve(L,y);
+  // Solve LT*x = y for x using backward substitution
+  choleskyBckSolve(L,y,x);
+  // Store the result in the inverse matrix
+  choleskyStore(Ainv,x,y);
+  return 1; //success
 }
 
 /*
