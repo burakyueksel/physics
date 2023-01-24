@@ -388,6 +388,9 @@ int isMatrixSquare(matrix * mtx)
 
 int isMatrixDiagonal(matrix * mtx)
 {
+  // does it exist?
+  if (!mtx) return -2;
+  // it should be square a matrix
   if (!isMatrixSquare(mtx)) return 0;
   int row, col;
   for (col = 1; col <= mtx->cols; col++)
@@ -403,6 +406,9 @@ int isMatrixDiagonal(matrix * mtx)
  */
 int isMatrixUpperTriangular(matrix * mtx)
 {
+  // does it exist?
+  if (!mtx) return -2;
+  // it should be square a matrix
   if (!isMatrixSquare(mtx)) return 0;
   int row, col;
   // looks at positions below the diagonal
@@ -411,6 +417,93 @@ int isMatrixUpperTriangular(matrix * mtx)
       if (ELEM(mtx, row, col) != 0.0)
         return 0;
   return 1;
+}
+
+/** @brief Check if a matrix is symmetric
+ */
+int isMatrixSymmetric (matrix* mtx)
+{
+  // does it exist?
+  if (!mtx) return -2;
+  // it should be a square matrix
+  if (!isMatrixSquare(mtx)) return -1;
+  int row, col;
+  for (row = 1; row<=mtx->rows; row++)
+  {
+    for (col = 1; col<=row; col++)
+    {
+      /* Check for symmetry
+       by verifying if the matrix is symmetric by comparing the elements
+       of the matrix with their transpose
+      */
+      if (ELEM(mtx, row, col) != ELEM(mtx, col, row))
+      {
+        return 0; // not symmetric
+      }
+    }
+  }
+  return 1; // success. It is symmetric
+}
+
+/** @brief Check if a matrix is Hermitian
+ * by comparing the elements of the matrix with their conjugate transpose
+ * using the fabs function to handle floating-point numbers with small errors.
+ */
+int isMatrixHermitian (matrix* mtx)
+{
+  // does it exist?
+  if (!mtx) return -2;
+  // it should be a square matrix
+  if (!isMatrixSquare(mtx)) return -1;
+  int row, col;
+  for (row = 1; row <= mtx->rows; row++)
+    for (col = 1; col <= mtx->cols; col++)
+      if (fabs(ELEM(mtx, row, col)-ELEM(mtx, col, row)> 1e-15))
+        return 0;
+  return 1;
+}
+
+/** @brief Check if a matrix is symmetric and positive definite
+ * It does checking for both symmetry and positive definiteness
+ */
+int isMatrixSymmetricPositiveDefinite (matrix* mtx)
+{
+  // FIXME: this is not working correctly
+  // does it exist?
+  if (!mtx) return -3;
+  // it should be a square matrix
+  if (!isMatrixSquare(mtx)) return -2;
+  int row, col;
+  float sum;
+  for (row = 1; row<=mtx->rows; row++)
+  {
+    sum = 0;
+    for (col = 1; col<=row; col++)
+    {
+      /* Check for symmetry
+       by verifying if the matrix is symmetric by comparing the elements
+       of the matrix with their transpose
+      */
+      if (ELEM(mtx, row, col) != ELEM(mtx, col, row))
+      {
+        return -1; // not symmetric
+      }
+      sum += ELEM(mtx, row, col)*ELEM(mtx, row, col);
+    }
+    /* Check positive definiteness
+    by verifying that all of its leading principal minors are positive.
+    This is done by checking that the diagonal element of matrix is greater
+    than the sum of squares of the elements above it. If this condition holds
+    for all elements of the matrix, the matrix is positive definite.
+    */
+    if (ELEM(mtx, row, row)<=sum)
+    {
+      printf("matrix element is: %f .\n", ELEM(mtx, row, row));
+      printf("sum is: %f .\n", sum);
+      return 0; // not positive definite.
+    }
+  }
+  return 1; // success. It is symmetric and positive definite
 }
 
 /* Create a diagonal matrix from a vector
@@ -490,12 +583,20 @@ int coleskyDecomp(matrix* A, matrix* L)
   /* source1: https://rosettacode.org/wiki/Cholesky_decomposition#C
    * source2 : https://en.wikipedia.org/wiki/Cholesky_decomposition*/
   // do the inputs even exist?
-  if (!A || !L) return -2;
+  if (!A || !L) return -3;
   // are the matrices square?
-  if (!isMatrixSquare(A) || !isMatrixSquare(L)) return -1;
+  if (!isMatrixSquare(A) || !isMatrixSquare(L)) return -2;
   // are the matrices of the same dimension?
-  if (!isSameDimension(A, L)) return 0;
-  // TODO: add a check if A is posdef AND symmetric
+  if (!isSameDimension(A, L)) return -1;
+  // is matrix symmetric and positive definite?
+  /*
+  A Hermitian matrix is always positive definite because all the eigenvalues of a Hermitian matrix are real and positive.
+  This is because the eigenvalues of Hermitian matrices are the same as the eigenvalues of its real symmetric matrices and
+  those are always real and positive.
+  In summary, a Hermitian matrix is guaranteed to be positive definite,
+  because it's a symmetric matrix with all real eigenvalues, which are guaranteed to be positive.
+  */
+  if (!isMatrixSymmetric(A) || !isMatrixHermitian(A)) return 0;
   int row, col, k;
   float sum;
   for (row = 1; row<=L->rows; row++)
@@ -644,6 +745,34 @@ int inverseMatrixChol(matrix* A, matrix* Ainv)
   return 1; //success
 }
 
+
+/*
+bool isPositiveDefinite(int n, double a[n][n]) {
+    double det = 1;
+    for (int i = 0; i < n; i++) {
+        det *= a[i][i];
+    }
+    if (det <= 0) {
+        return false;
+    }
+    for (int i = 1; i <= n; i++) {
+        double sub_det = 1;
+        for (int j = 0; j < i; j++) {
+            for (int k = 0; k < i; k++) {
+                sub_matrix[j][k] = a[j][k];
+            }
+        }
+        for (int j = 0; j < i; j++) {
+            sub_det *= sub_matrix[j][j];
+        }
+        if (sub_det <= 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+*/
 /*
 // An alternative using cholesky
 

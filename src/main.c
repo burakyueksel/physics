@@ -108,7 +108,15 @@ int main ()
         setMatrixElement(A, 3, 2, 0);
         setMatrixElement(A, 3, 3, 11);
         coleskyDecomp(A, L);
-        inverseMatrixChol(A,Ai);
+        inverseMatrixChol(g_physicsPointObj.I_kgm2,Ai);
+        /*
+        int a, b, c;
+        a=isMatrixSymmetricPositiveDefinite(A);
+        b=isMatrixSymmetric(A);
+        c=isMatrixHermitian(A);
+        printf(" isMatrixSymmetric: %d .\n", b);
+        printf(" isMatrixHermitian: %d .\n", c);
+        */
         //matrix* LT = newMatrix(3,3);
         //transposeMatrix(L,LT);
         //productMatrix(L,LT,Ai);
@@ -118,6 +126,11 @@ int main ()
         printMatrix(L);
         printf("Matrix A inverse:\n");
         printMatrix(Ai);
+        // delete them
+        deleteMatrix(A);
+        deleteMatrix(L);
+        deleteMatrix(Ai);
+
 /*
         // test script for matrixConc. To be removed.
         matrix * A, * B, * C;
