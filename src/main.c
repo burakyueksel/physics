@@ -97,6 +97,7 @@ int main ()
         matrix* L = newMatrix(3,3);
         matrix* A = newMatrix(3,3);
         matrix* Ai = newMatrix(3,3);
+        matrix* AAi = newMatrix(3,3);
         // chose A matrix from the example here: https://rosettacode.org/wiki/Cholesky_decomposition#C
         setMatrixElement(A, 1, 1, 25);
         setMatrixElement(A, 1, 2, 15);
@@ -108,7 +109,8 @@ int main ()
         setMatrixElement(A, 3, 2, 0);
         setMatrixElement(A, 3, 3, 11);
         coleskyDecomp(A, L);
-        inverseMatrixChol(g_physicsPointObj.I_kgm2,Ai);
+        inverseMatrixChol(A,Ai);
+        productMatrix(A,Ai,AAi);
         /*
         int a, b, c;
         a=isMatrixSymmetricPositiveDefinite(A);
@@ -126,10 +128,13 @@ int main ()
         printMatrix(L);
         printf("Matrix A inverse:\n");
         printMatrix(Ai);
+        printf("Matrix A times A inverse (expect identity):\n");
+        printMatrix(AAi);
         // delete them
         deleteMatrix(A);
         deleteMatrix(L);
         deleteMatrix(Ai);
+        deleteMatrix(AAi);
 
 /*
         // test script for matrixConc. To be removed.

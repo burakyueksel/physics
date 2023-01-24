@@ -719,21 +719,17 @@ int inverseMatrixChol(matrix* A, matrix* Ainv)
 {
   // do the inputs even exist?
   if (!A || !Ainv) return -2;
-  // are the matrices square?
-  if (!isMatrixSquare(A) || !isMatrixSquare(Ainv)) return -1;
-  // are the matrices of the same dimension?
-  if (!isSameDimension(A, Ainv)) return 0;
-  // TODO: add a check if A is posdef AND symmetric
-  //
+  // is square, is same dimension, is pos def and is symmetric checks are done in cholesky decomp
+  // create an empty matrix for cholesky decomposition, in the same dimension of A
+  matrix* L = newMatrix(A->rows, A->cols);
+  // compute the cholesky decomposition of A, which is L
+  int chol_status = coleskyDecomp(A, L);
+  if (!chol_status) return chol_status;
   // create x and y vectors for backward and forward substitution
   matrix* x = newMatrix(A->rows, 1);
   matrix* y = copyMatrix(x);
-  // create an empty matrix for cholesky decomposition, in the same dimension of A
-  matrix* L = newMatrix(A->rows, A->cols);
   // create an empty matrix, which will be the transpose of L
   matrix* LT= copyMatrix(L);
-  // compute the cholesky decomposition of A, which is L
-  coleskyDecomp(A, L);
   // compute the transpose of L
   transposeMatrix(L,LT);
   // Solve L*y = I for y using forward substitution
