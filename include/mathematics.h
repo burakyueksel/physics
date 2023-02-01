@@ -10,5 +10,6 @@
 
 float newton_sqrt(float x);
 float randn();
+float signumf(float x);
 
 #endif // MATHEMATICS_H_

@@ -38,3 +38,10 @@ float newton_sqrt(float x)
     }
     return result;
 }
+
+/** @brief Sign function. Returns the sign of the float variable*/
+float signumf(float x)
+{
+    if (x>=1e-15) return 1;
+    else return -1;
+}

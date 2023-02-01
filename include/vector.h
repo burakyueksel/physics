@@ -37,8 +37,8 @@ typedef struct vector
 ********************************************
 */
 void crossProduct(vector3 a, vector3 b, vector3 axb);
-void quaternionProduct(quaternion q1, quaternion q2, quaternion q1xq2);
-void quaternionInverse(quaternion q, quaternion q_inverse);
-
+void quaternionProduct(quaternion q1, quaternion q2, quaternion* q1xq2);
+void quaternionInverse(quaternion q, quaternion* q_inverse);
+float quaternionZAlignNorm(quaternion q);
 
 #endif // VECTOR_H_
