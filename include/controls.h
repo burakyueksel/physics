@@ -9,6 +9,7 @@
  **/
 
 #include "matrix.h"
+#include "vector.h"
 
 // Structure to store PID controller data
 typedef struct {
@@ -30,16 +31,28 @@ typedef struct
   matrix* e3;
 } SE3Controller;
 
+typedef struct
+{
+  matrix* kd;
+  float kp_xy;
+  float kp_z;
+} TiltPrioCtrl;
+
+
 
 //void ctrlInit(PIDController* pid);
 void initPID(PIDController* pid, float kp, float ki, float kd);
+void initSE3Ctrl(SE3Controller *se3);
+void initTiltPrioCtrl(TiltPrioCtrl *tltCtl);
+
 float updatePID(PIDController *pid, float error, float dt);
 
-void initSE3Ctrl(SE3Controller *se3);
 void updateSE3Ctrl(SE3Controller *se3,
                     matrix* des_pos, matrix* des_vel, matrix* des_acc, matrix* des_jerk,
                     matrix* pos, matrix* vel, matrix* acc, matrix* jerk, matrix* des_snap,
                     matrix* R, matrix* rotVel,
                     float yawRef, float yawRefDot, float yawRefdDot);
-
+void updateTiltPrioCtrl(TiltPrioCtrl *tltCtl, matrix* rotVel, quaternion q,
+                                             matrix* rotVelDes, quaternion qDes,
+                                             matrix* rotVelDotEst);
 #endif // CONTROLS_H_

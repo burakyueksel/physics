@@ -7,6 +7,7 @@
 
 #include "controls.h"
 #include "parameters.h"
+#include "mathematics.h"
 #include <math.h> // for cos, sin etc
 
 // Initialize PID controller
@@ -20,18 +21,6 @@ void initPID(PIDController *pid, float kp, float ki, float kd)
   pid->derivative = 0;
   pid->prev_error = 0;
 }
-
-// Update PID controller
-float updatePID(PIDController *pid, float error, float dt)
-{
-  pid->error = error;
-  pid->integral += error * dt;
-  pid->derivative = (error - pid->prev_error) / dt;
-  pid->prev_error = error;
-  float output = pid->kp * pid->error + pid->ki * pid->integral + pid->kd * pid->derivative;
-  return output;
-}
-
 
 void initSE3Ctrl(SE3Controller *se3)
 {
@@ -59,6 +48,37 @@ void initSE3Ctrl(SE3Controller *se3)
   setMatrixElement(se3->kOmega,  1,  1,  2.54);
   setMatrixElement(se3->kOmega,  2,  2,  2.54);
   setMatrixElement(se3->kOmega,  3,  3,  2.54);
+}
+
+void initTiltPrioCtrl(TiltPrioCtrl *tiltCtrl)
+{
+  // source:https://www.flyingmachinearena.ethz.ch/wp-content/publications/2018/breTCST18.pdf
+  float timeConst_xy = 0.3;
+  float timeConst_z  = 0.3;
+  float damping_xy   = 0.707;
+  float damping_z    = 0.707;
+
+  tiltCtrl->kp_xy = 2*POINT_I_XX_KGM2/(timeConst_xy*timeConst_xy); // see eq. 37
+  tiltCtrl->kp_z = 2*POINT_I_ZZ_KGM2/(timeConst_z*timeConst_z); // see eq. 37
+
+  float kd_xy = 2*POINT_I_XX_KGM2*damping_xy/timeConst_xy; // see eq. 38
+  float kd_z  = 2*POINT_I_ZZ_KGM2*damping_z/timeConst_z; // see eq.38
+
+  tiltCtrl->kd = newMatrix(3,1);
+  setMatrixElement(tiltCtrl->kd,  1,  1,  kd_xy);
+  setMatrixElement(tiltCtrl->kd,  2,  2,  kd_xy);
+  setMatrixElement(tiltCtrl->kd,  3,  3,  kd_z);
+}
+
+// Update PID controller
+float updatePID(PIDController *pid, float error, float dt)
+{
+  pid->error = error;
+  pid->integral += error * dt;
+  pid->derivative = (error - pid->prev_error) / dt;
+  pid->prev_error = error;
+  float output = pid->kp * pid->error + pid->ki * pid->integral + pid->kd * pid->derivative;
+  return output;
 }
 
 void updateSE3Ctrl(SE3Controller *se3,
@@ -262,6 +282,33 @@ void updateSE3Ctrl(SE3Controller *se3,
  productScalarMatrix(2/normACube,ATAdotAdot,b3_c_ddot_2ndTerm);
   // TODO: to be cont.
   // delete all created matrices at the end
+}
+
+void updateTiltPrioCtrl(TiltPrioCtrl *tltCtl, matrix* rotVel, quaternion q,
+                                             matrix* rotVelDes, quaternion qDes,
+                                             matrix* rotVelDotEst)
+{
+  // eq. 13
+  quaternion q_inv;
+  quaternion q_error;
+  quaternionInverse(q, &q_inv);
+  quaternionProduct(qDes, q_inv, &q_error);
+  // eq. 14
+  matrix* rotVell_error = newMatrix(3,1);
+  subtractMatrix(rotVelDes, rotVel, rotVell_error);
+  // eq. 18
+  quaternion q_err_red;
+  float one_over_q_err_red_norm = quaternionZAlignNorm(q_error);
+  q_err_red.w = one_over_q_err_red_norm * (q_error.w*q_error.w + q_error.z*q_error.z);
+  q_err_red.x = one_over_q_err_red_norm * (q_error.w*q_error.x - q_error.y*q_error.z);
+  q_err_red.y = one_over_q_err_red_norm * (q_error.w*q_error.y + q_error.x*q_error.z);
+  q_err_red.z = 0.0f;
+  // eq. 20
+  quaternion q_err_yaw;
+  q_err_yaw.w = one_over_q_err_red_norm * q_error.w;
+  q_err_yaw.x = 0.0f;
+  q_err_yaw.y = 0.0f;
+  q_err_yaw.z = one_over_q_err_red_norm * q_error.z;
 }
 
 /*
