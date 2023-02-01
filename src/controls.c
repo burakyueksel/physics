@@ -68,6 +68,18 @@ void initTiltPrioCtrl(TiltPrioCtrl *tiltCtrl)
   setMatrixElement(tiltCtrl->kd,  1,  1,  kd_xy);
   setMatrixElement(tiltCtrl->kd,  2,  2,  kd_xy);
   setMatrixElement(tiltCtrl->kd,  3,  3,  kd_z);
+
+  tiltCtrl->J_kgm2 = newMatrix(3,3);
+  /*set the moment of inertia terms*/
+  setMatrixElement(tiltCtrl->J_kgm2, 1, 1, POINT_I_XX_KGM2);//Ixx
+  setMatrixElement(tiltCtrl->J_kgm2, 2, 2, POINT_I_YY_KGM2);//IYY
+  setMatrixElement(tiltCtrl->J_kgm2, 3, 3, POINT_I_ZZ_KGM2);//IZZ
+  setMatrixElement(tiltCtrl->J_kgm2, 1, 2, POINT_I_XY_KGM2);//IXY
+  setMatrixElement(tiltCtrl->J_kgm2, 2, 1, POINT_I_XY_KGM2);//IYX=IXY
+  setMatrixElement(tiltCtrl->J_kgm2, 1, 3, POINT_I_XZ_KGM2);//IXZ
+  setMatrixElement(tiltCtrl->J_kgm2, 3, 1, POINT_I_XZ_KGM2);//IZX=IXZ
+  setMatrixElement(tiltCtrl->J_kgm2, 2, 3, POINT_I_YZ_KGM2);//IYZ
+  setMatrixElement(tiltCtrl->J_kgm2, 3, 2, POINT_I_YZ_KGM2);//IZY=IYZ
 }
 
 // Update PID controller
@@ -284,7 +296,7 @@ void updateSE3Ctrl(SE3Controller *se3,
   // delete all created matrices at the end
 }
 
-void updateTiltPrioCtrl(TiltPrioCtrl *tltCtl, matrix* rotVel, quaternion q,
+void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
                                              matrix* rotVelDes, quaternion qDes,
                                              matrix* rotVelDotEst)
 {
@@ -309,6 +321,15 @@ void updateTiltPrioCtrl(TiltPrioCtrl *tltCtl, matrix* rotVel, quaternion q,
   q_err_yaw.x = 0.0f;
   q_err_yaw.y = 0.0f;
   q_err_yaw.z = one_over_q_err_red_norm * q_error.z;
+  // eq. 23
+  matrix* tau_ff = newMatrix(3,1);
+  matrix* Jomega = newMatrix(3,1);
+  matrix* JomegaXomega = newMatrix(3,1);
+  matrix* JdOmegaEst = newMatrix(3,1);
+  productMatrix(tiltCtrl->J_kgm2, rotVel, Jomega);
+  crossProduct3DVec(Jomega, rotVel, JomegaXomega);
+  productMatrix(tiltCtrl->J_kgm2, rotVelDotEst, JdOmegaEst);
+  subtractMatrix(JdOmegaEst,JomegaXomega,tau_ff);
 }
 
 /*
