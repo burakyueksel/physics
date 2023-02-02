@@ -37,6 +37,7 @@ typedef struct
   float kp_xy;
   float kp_z;
   matrix* J_kgm2;
+  matrix* ctrlMoments_Nm;
 } TiltPrioCtrl;
 
 

@@ -9,6 +9,7 @@
  **/
 
 #include <stdio.h> // for print function
+#include "matrix.h" // for converting vectors to matrix form
 
 typedef float vector;
 typedef vector vector2[2];
@@ -40,5 +41,6 @@ void crossProduct(vector3 a, vector3 b, vector3 axb);
 void quaternionProduct(quaternion q1, quaternion q2, quaternion* q1xq2);
 void quaternionInverse(quaternion q, quaternion* q_inverse);
 float quaternionZAlignNorm(quaternion q);
+int getQuaternionVectorPart(quaternion q, matrix* qv);
 
 #endif // VECTOR_H_

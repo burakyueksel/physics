@@ -184,6 +184,32 @@ int transposeMatrix(matrix * in, matrix * out)
   return 0;
 }
 
+/* reads matrix mtx and returns its transpose
+*/
+matrix * transpoMatrix(matrix * mtx)
+{
+  int row, col;
+  matrix* transposeMatrix = newMatrix(mtx->rows, mtx->cols);
+  for (row = 1; row <= mtx->rows; row++)
+    for (col = 1; col <= mtx->cols; col++)
+      ELEM(transposeMatrix, col, row) = ELEM(mtx, row, col);
+  return transposeMatrix;
+}
+
+
+/* reads matrix mtx and returns its negative, i.e. -mtx
+ * by multiplying all its elements with -1.
+*/
+matrix * negMatrix (matrix* mtx)
+{
+  int row, col;
+  matrix* negativeMatrix = newMatrix(mtx->rows, mtx->cols);
+  for (row = 1; row <= mtx->rows; row++)
+    for (col = 1; col <= mtx->cols; col++)
+      ELEM(negativeMatrix, col, row) = -ELEM(mtx, row, col);
+  return negativeMatrix;
+}
+
 /* Writes the sum of matrices mtx1 and mtx2 into matrix 
  * sum. Returns 0 if successful, -1 if any of the matrices 
  * are NULL, and -2 if the dimensions of the matrices are
@@ -205,6 +231,55 @@ int sumMatrix(matrix * mtx1, matrix * mtx2, matrix * sum)
         ELEM(mtx1, row, col) + ELEM(mtx2, row, col);
   return 0;
 }
+
+/* Writes the sum of matrices mtx1, mtx2 and mtx3 into matrix
+ * sum. Returns 0 if successful, -1 if any of the matrices
+ * are NULL, and -2 if the dimensions of the matrices are
+ * incompatible.
+ */
+int sum3Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * sum)
+{
+  if (mtx1->rows != mtx2->rows ||
+      mtx1->rows != mtx3->rows ||
+      mtx1->rows != sum->rows  ||
+      mtx1->cols != mtx2->cols ||
+      mtx1->cols != mtx3->cols ||
+      mtx1->cols != sum->cols)
+    return -2;
+
+  int row, col;
+  for (col = 1; col <= mtx1->cols; col++)
+    for (row = 1; row <= mtx1->rows; row++)
+      ELEM(sum, row, col) =
+        ELEM(mtx1, row, col) + ELEM(mtx2, row, col) + ELEM(mtx3, row, col);
+  return 0;
+}
+
+/* Writes the sum of matrices mtx1, mtx2 and mtx3 into matrix
+ * sum. Returns 0 if successful, -1 if any of the matrices
+ * are NULL, and -2 if the dimensions of the matrices are
+ * incompatible.
+ */
+int sum4Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * mtx4, matrix * sum)
+{
+  if (mtx1->rows != mtx2->rows ||
+      mtx1->rows != mtx3->rows ||
+      mtx1->rows != mtx4->rows ||
+      mtx1->rows != sum->rows  ||
+      mtx1->cols != mtx2->cols ||
+      mtx1->cols != mtx3->cols ||
+      mtx1->cols != mtx4->cols ||
+      mtx1->cols != sum->cols)
+    return -2;
+
+  int row, col;
+  for (col = 1; col <= mtx1->cols; col++)
+    for (row = 1; row <= mtx1->rows; row++)
+      ELEM(sum, row, col) =
+        ELEM(mtx1, row, col) + ELEM(mtx2, row, col) + ELEM(mtx3, row, col) + ELEM(mtx4, row, col);
+  return 0;
+}
+
 
 /* Writes the subtraction of matrice mtx2 from mtx1 into another matrix
  * Returns 0 if successful, -1 if any of the matrices
