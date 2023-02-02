@@ -80,6 +80,8 @@ void initTiltPrioCtrl(TiltPrioCtrl *tiltCtrl)
   setMatrixElement(tiltCtrl->J_kgm2, 3, 1, POINT_I_XZ_KGM2);//IZX=IXZ
   setMatrixElement(tiltCtrl->J_kgm2, 2, 3, POINT_I_YZ_KGM2);//IYZ
   setMatrixElement(tiltCtrl->J_kgm2, 3, 2, POINT_I_YZ_KGM2);//IZY=IYZ
+
+  tiltCtrl->ctrlMoments_Nm = newMatrix(3,1);
 }
 
 // Update PID controller
@@ -119,8 +121,6 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrix* kvev = newMatrix(3,1);
   matrix* mge3 = newMatrix(3,1);
   matrix* mad = newMatrix(3,1);
-  matrix* xv = newMatrix(3,1);
-  matrix* mad_mge3 = newMatrix(3,1);
   // kx*error_x
   productMatrix(se3->kx, error_pos, kxex);
   // kv*error_v
@@ -129,12 +129,8 @@ void updateSE3Ctrl(SE3Controller *se3,
   productScalarMatrix(POINT_MASS_KG*ENV_GRAVITY_MPS2, se3->e3, mge3);
   // m*ad
   productScalarMatrix(POINT_MASS_KG, des_acc, mad);
-  // + kx*error_x + kv*error_v
-  sumMatrix(kxex,kvev,xv);
-  // m*ad - m*g*e3
-  subtractMatrix(mad,mge3,mad_mge3);
-  // m*ad - m*g*e3 - kx*error_x - kv*error_v
-  subtractMatrix(mad_mge3,xv,A);
+  // A = -kx*error_x - kv*error_v - m*g*e3 + m*ad
+  sum4Matrix(negMatrix(kxex), negMatrix(kvev), negMatrix(mge3), mad, A);
   //f = vec_dot(-A, R*e3); // equal to -transpose(A)*R*e3
   matrix* f     = newMatrix(3,1);
   matrix* AT    = newMatrix(3,1);
@@ -330,6 +326,34 @@ void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
   crossProduct3DVec(Jomega, rotVel, JomegaXomega);
   productMatrix(tiltCtrl->J_kgm2, rotVelDotEst, JdOmegaEst);
   subtractMatrix(JdOmegaEst,JomegaXomega,tau_ff);
+  // eq. 21
+  matrix* qv_e_red = newMatrix(3,1);
+  matrix* qv_e_yaw = newMatrix(3,1);
+  matrix* kpXYqered= newMatrix(3,1);
+  matrix* kpzSqeyaw= newMatrix(3,1);
+  matrix* kdOmegae = newMatrix(3,1);
+  float signqw = signumf(q_error.w);
+
+  getQuaternionVectorPart(q_err_red, qv_e_red);
+  getQuaternionVectorPart(q_err_yaw, qv_e_yaw);
+
+  productScalarMatrix(tiltCtrl->kp_xy, qv_e_red, kpXYqered);
+  productScalarMatrix(signqw*tiltCtrl->kp_z, qv_e_yaw, kpzSqeyaw);
+  productMatrix(tiltCtrl->kd, rotVell_error, kdOmegae);
+  sum4Matrix(kpXYqered,kpzSqeyaw,kdOmegae,tau_ff,tiltCtrl->ctrlMoments_Nm);
+
+  // release memory
+  deleteMatrix(rotVell_error);
+  deleteMatrix(tau_ff);
+  deleteMatrix(Jomega);
+  deleteMatrix(JomegaXomega);
+  deleteMatrix(JdOmegaEst);
+  deleteMatrix(qv_e_red);
+  deleteMatrix(qv_e_yaw);
+  deleteMatrix(kpXYqered);
+  deleteMatrix(kpzSqeyaw);
+  deleteMatrix(kdOmegae);
+
 }
 
 /*

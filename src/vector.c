@@ -53,3 +53,13 @@ float quaternionZAlignNorm(quaternion q)
     return 1/sqrtf(norm);
   }
 }
+
+int getQuaternionVectorPart(quaternion q, matrix* qv)
+{
+  // qv should be a defined 3x1 matrix (rows x cols)
+  if (qv->cols != 1 || qv->rows != 3) return 0;
+  setMatrixElement(qv,1,1,q.x);
+  setMatrixElement(qv,2,1,q.y);
+  setMatrixElement(qv,3,1,q.z);
+  return 1;
+}
