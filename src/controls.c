@@ -48,6 +48,9 @@ void initSE3Ctrl(SE3Controller *se3)
   setMatrixElement(se3->kOmega,  1,  1,  2.54);
   setMatrixElement(se3->kOmega,  2,  2,  2.54);
   setMatrixElement(se3->kOmega,  3,  3,  2.54);
+
+  se3->ctrlForces_N = newMatrix(3,1);   // Fx, Fy, Fz
+  se3->ctrlMoments_Nm = newMatrix(3,1); // Mx, My, Mz
 }
 
 void initTiltPrioCtrl(TiltPrioCtrl *tiltCtrl)
@@ -117,29 +120,15 @@ void updateSE3Ctrl(SE3Controller *se3,
 
   //A = -kx*error_x - kv*error_v - m*g*e3 + m*ad
   matrix* A = newMatrix(3,1);
-  matrix* kxex = newMatrix(3,1);
-  matrix* kvev = newMatrix(3,1);
-  matrix* mge3 = newMatrix(3,1);
-  matrix* mad = newMatrix(3,1);
-  // kx*error_x
-  productMatrix(se3->kx, error_pos, kxex);
-  // kv*error_v
-  productMatrix(se3->kv, error_pos, kvev);
-  // m*g*e3
-  productScalarMatrix(POINT_MASS_KG*ENV_GRAVITY_MPS2, se3->e3, mge3);
-  // m*ad
-  productScalarMatrix(POINT_MASS_KG, des_acc, mad);
-  // A = -kx*error_x - kv*error_v - m*g*e3 + m*ad
-  sum4Matrix(negMatrix(kxex), negMatrix(kvev), negMatrix(mge3), mad, A);
+  sum4Matrix(returnNegMatrix(returnProductMatrix(se3->kx, error_pos)),
+             returnNegMatrix(returnProductMatrix(se3->kv, error_vel)),
+             returnNegMatrix(returnProductScalarMatrix(POINT_MASS_KG*ENV_GRAVITY_MPS2, se3->e3)),
+             returnProductScalarMatrix(POINT_MASS_KG, des_acc), A);
   //f = vec_dot(-A, R*e3); // equal to -transpose(A)*R*e3
   matrix* f     = newMatrix(3,1);
-  matrix* AT    = newMatrix(3,1);
-  matrix* negAT = newMatrix(3,1);
-  matrix* Re3   = newMatrix(3,1);
+  matrix* AT    = newMatrix(3,1);// we will use AT later. Hence compute it once and store it.
   transposeMatrix(A, AT);
-  productScalarMatrix(-1.0,AT,negAT);
-  productMatrix(R,se3->e3,Re3);
-  productMatrix(negAT,Re3,f);
+  productMatrix(returnNegMatrix(AT),returnProductMatrix(R,se3->e3),f);
   // desired heading as function of yaw and its derivatives
   matrix* b1_d          = newMatrix(3,1);
   matrix* b1_d_dot      = newMatrix(3,1);
@@ -164,61 +153,52 @@ void updateSE3Ctrl(SE3Controller *se3,
     direction of the thrust vector (desired/control)
     aka body z direction
   */
-  float normA = normL2Vec(A);
-  matrix* b3_c = newMatrix(3,1);
+  float normA = normL2Vec(A); // another repeatedely used value. Hence compute once and store.
+  matrix* b3_c = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
   productScalarMatrix(-1/normA, A, b3_c);
   /*vector orthogonal to thrust direction and desired heading.
     this is directing to y axis
   */
-  matrix* C = newMatrix(3,1);
+  matrix* C = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
   crossProduct3DVec(b3_c, b1_d, C);
   /*orthonormal desired body y direction
   */
-  matrix* b2_c = newMatrix(3,1);
-  float normC = normL2Vec(C);
+  matrix* b2_c = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
+  float normC = normL2Vec(C); // another repeatedely used value. Hence compute once and store.
   productScalarMatrix(1/normC, C, b2_c);
   /*orthonormal desired body x direction
   */
   matrix* b1_c = newMatrix(3,1);
   crossProduct3DVec(b2_c, b3_c, b1_c);
+  deleteMatrix(b1_c); // remove the temp matrix
   /*construct the rotation matrix to be tracked: R_c = [b1_c b2_c b3_c]
   */
   matrix* R_c = newMatrix(3,3);
   matrix* R_c_23 = newMatrix(3,2);
   matrixConcatenation(b2_c, b3_c, R_c_23);
   matrixConcatenation(b1_c, R_c_23, R_c);
+  deleteMatrix(R_c_23); // remove the temp matrix
 
   /*time derivatives of body axes for excessive attitude tracking performances
   A_dot   = -kx*error_v - kv*error_a + m*jd;
   */
   matrix* Adot = newMatrix(3,1);
-  matrix* mjd = newMatrix(3,1);
-  matrix* kvea = newMatrix(3,1);
-  matrix* kxev = newMatrix(3,1);
-  matrix* va = newMatrix(3,1);
-
-  productScalarMatrix(POINT_MASS_KG,des_jerk,mjd);
-  productMatrix(se3->kv, error_acc, kvea);
-  productMatrix(se3->kx, error_vel, kxev);
-  sumMatrix(kxev, kvea, va);
-  subtractMatrix(mjd, va, Adot);
+  sum3Matrix(returnNegMatrix(returnProductMatrix(se3->kx, error_vel)),
+             returnNegMatrix(returnProductMatrix(se3->kv, error_acc)),
+             returnProductScalarMatrix(POINT_MASS_KG,des_jerk),Adot);
 
   /*time derivative of body z*
   b3_c_dot = -A_dot/norm(A) + (vec_dot(A,A_dot)/norm(A)^3)*A;
+  // remember vec_dot(A,A_dot) = A^T * A_dot
   */
-  float normACube = normA*normA*normA;
-  matrix* AdotNormd = newMatrix(3,1);
-  matrix* ATAdot = newMatrix(1,1);
-  matrix* ATAdotNormd3 = newMatrix(1,1);
-  matrix* ATAdotNormd3A = newMatrix(3,1);
+  float normACube = normA*normA*normA; // another repeatedely used value. Hence compute once and store.
+  matrix* ATAdot = newMatrix(1,1); // another repeatedely used value. Hence compute once and store.
   matrix* b3_c_dot = newMatrix(3,1);
-
-  productScalarMatrix(-1/normA, Adot, AdotNormd);
   productMatrix(AT,Adot,ATAdot);
-  productScalarMatrix(1/normACube,ATAdot,ATAdotNormd3);
-  productMatrix(ATAdotNormd3,A,ATAdotNormd3A);
-  sumMatrix(AdotNormd, ATAdotNormd3A, b3_c_dot);
-
+  sumMatrix(returnProductScalarMatrix(-1/normA, Adot),
+             returnProductMatrix(returnProductScalarMatrix(1/normACube, ATAdot),A),
+             b3_c_dot);
+  // TODO: continue clean-up from here onwards
   /*
   C_dot   = vec_cross(b3_c_dot, b1_d) + vec_cross(b3_c, b1_d_dot);
   */
@@ -319,41 +299,26 @@ void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
   q_err_yaw.z = one_over_q_err_red_norm * q_error.z;
   // eq. 23
   matrix* tau_ff = newMatrix(3,1);
-  matrix* Jomega = newMatrix(3,1);
   matrix* JomegaXomega = newMatrix(3,1);
-  matrix* JdOmegaEst = newMatrix(3,1);
-  productMatrix(tiltCtrl->J_kgm2, rotVel, Jomega);
-  crossProduct3DVec(Jomega, rotVel, JomegaXomega);
-  productMatrix(tiltCtrl->J_kgm2, rotVelDotEst, JdOmegaEst);
-  subtractMatrix(JdOmegaEst,JomegaXomega,tau_ff);
+  crossProduct3DVec(returnProductMatrix(tiltCtrl->J_kgm2, rotVel), rotVel, JomegaXomega);
+  sumMatrix(returnProductMatrix(tiltCtrl->J_kgm2, rotVelDotEst),returnNegMatrix(JomegaXomega),tau_ff);
   // eq. 21
   matrix* qv_e_red = newMatrix(3,1);
   matrix* qv_e_yaw = newMatrix(3,1);
-  matrix* kpXYqered= newMatrix(3,1);
-  matrix* kpzSqeyaw= newMatrix(3,1);
-  matrix* kdOmegae = newMatrix(3,1);
   float signqw = signumf(q_error.w);
-
   getQuaternionVectorPart(q_err_red, qv_e_red);
   getQuaternionVectorPart(q_err_yaw, qv_e_yaw);
-
-  productScalarMatrix(tiltCtrl->kp_xy, qv_e_red, kpXYqered);
-  productScalarMatrix(signqw*tiltCtrl->kp_z, qv_e_yaw, kpzSqeyaw);
-  productMatrix(tiltCtrl->kd, rotVell_error, kdOmegae);
-  sum4Matrix(kpXYqered,kpzSqeyaw,kdOmegae,tau_ff,tiltCtrl->ctrlMoments_Nm);
-
+  sum4Matrix(returnProductScalarMatrix(tiltCtrl->kp_xy, qv_e_red),
+             returnProductScalarMatrix(signqw*tiltCtrl->kp_z, qv_e_yaw),
+             returnProductMatrix(tiltCtrl->kd, rotVell_error),
+             tau_ff,
+             tiltCtrl->ctrlMoments_Nm);
   // release memory
   deleteMatrix(rotVell_error);
   deleteMatrix(tau_ff);
-  deleteMatrix(Jomega);
   deleteMatrix(JomegaXomega);
-  deleteMatrix(JdOmegaEst);
   deleteMatrix(qv_e_red);
   deleteMatrix(qv_e_yaw);
-  deleteMatrix(kpXYqered);
-  deleteMatrix(kpzSqeyaw);
-  deleteMatrix(kdOmegae);
-
 }
 
 /*
