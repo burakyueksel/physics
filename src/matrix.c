@@ -184,9 +184,11 @@ int transposeMatrix(matrix * in, matrix * out)
   return 0;
 }
 
-/* reads matrix mtx and returns its transpose
+/* Reads matrix mtx and returns its transpose.
+ * Note that the created matrix transposeMatrix inside this function
+ * is NOT deleted later.
 */
-matrix * transpoMatrix(matrix * mtx)
+matrix * returnTransposedMatrix(matrix * mtx)
 {
   int row, col;
   matrix* transposeMatrix = newMatrix(mtx->rows, mtx->cols);
@@ -197,10 +199,12 @@ matrix * transpoMatrix(matrix * mtx)
 }
 
 
-/* reads matrix mtx and returns its negative, i.e. -mtx
+/* Reads matrix mtx and returns its negative, i.e. -mtx
  * by multiplying all its elements with -1.
+ * Note that the created negMatrix inside this function is NOT
+ * deleted later.
 */
-matrix * negMatrix (matrix* mtx)
+matrix * returnNegMatrix (matrix* mtx)
 {
   int row, col;
   matrix* negativeMatrix = newMatrix(mtx->rows, mtx->cols);
@@ -327,6 +331,33 @@ int productMatrix(matrix * mtx1, matrix * mtx2, matrix * prod)
   return 0;
 }
 
+/* Writes the product of matrices mtx1 and mtx2 into matrix
+ * prod and returns matix prod.
+ * Note that the created prod inside this function is NOT
+ * deleted later.
+ */
+matrix * returnProductMatrix(matrix * mtx1, matrix * mtx2)
+{
+  matrix* prod = newMatrix(mtx1->rows, mtx2->cols);
+  // if any of the input matrices do not exist or dimensions do not fit
+  // return prod as 0 matrix
+  if (!mtx1 || !mtx2 || !prod ||
+      mtx1->cols != mtx2->rows ||
+      mtx1->rows != prod->rows ||
+      mtx2->cols != prod->cols)
+    return prod;
+
+  int row, col, k;
+  for (col = 1; col <= mtx2->cols; col++)
+    for (row = 1; row <= mtx1->rows; row++) {
+      float val = 0.0;
+      for (k = 1; k <= mtx1->cols; k++)
+        val += ELEM(mtx1, row, k) * ELEM(mtx2, k, col);
+      ELEM(prod, row, col) = val;
+    }
+  return prod;
+}
+
 /* Writes the cross product of two 3D vectors mtx1 and mtx2
  * Returns 0 if successful, -1 if any of the
  * vectors are NULL, and -2 if the dimensions of the
@@ -348,6 +379,32 @@ int crossProduct3DVec(matrix * mtx1, matrix * mtx2, matrix * crossProd)
   ELEM(crossProd,3,1) = ELEM(mtx1,1,1) * ELEM(mtx2,2,1) - ELEM(mtx1,2,1) * ELEM(mtx2,1,1);
 
   return 0;
+}
+
+/* Writes the cross product of two 3D vectors mtx1 and mtx2
+ * Returns crossProd  vector.
+ * Note that the created crossProd inside this function is NOT
+ * deleted later.
+ */
+matrix * returnCrossProduct3DVec(matrix * mtx1, matrix * mtx2)
+{
+  matrix* crossProd = newMatrix(3,1);
+  // if any of the input matrices (vectors) do not exist or dimensions do not fit
+  // return crossProd as a 3x1 vector with all elements 0.
+  if (!mtx1 || !mtx2 || !crossProd ||
+      mtx1->cols != mtx2->cols ||
+      mtx1->rows != mtx2->rows ||
+      mtx2->cols != crossProd->cols ||
+      mtx2->rows != crossProd->rows ||
+      mtx1->cols != 1 ||
+      mtx1->rows != 3)
+    return crossProd;
+
+  ELEM(crossProd,1,1) = ELEM(mtx1,2,1) * ELEM(mtx2,3,1) - ELEM(mtx1,3,1) * ELEM(mtx2,2,1);
+  ELEM(crossProd,2,1) = ELEM(mtx1,3,1) * ELEM(mtx2,1,1) - ELEM(mtx1,1,1) * ELEM(mtx2,3,1);
+  ELEM(crossProd,3,1) = ELEM(mtx1,1,1) * ELEM(mtx2,2,1) - ELEM(mtx1,2,1) * ELEM(mtx2,1,1);
+
+  return crossProd;
 }
 
 /* Hat operation: Writes the skew symmetric matrix from a 3D vector mtx
@@ -645,6 +702,23 @@ int productScalarMatrix(float scalar, matrix* mtx, matrix* product)
       if (row == col)
       ELEM(product, row, col) = scalar * ELEM(mtx, row, col);
   return 0;
+}
+
+/* Compute the product of a matrix (or vector) with a scalar
+ */
+matrix * returnProductScalarMatrix(float scalar, matrix* mtx)
+{
+  matrix* product = copyMatrix(mtx);
+  // if any of the inputs do not exist or dimensions do not fit
+  // return product as same as mtx (copied) before the algorithm.
+  if (!scalar || !mtx || mtx->rows != product->rows || mtx->cols != product->cols) return product;
+
+  int row, col;
+  for (col = 1; col <= product->cols; col++)
+    for (row = 1; row <= product->rows; row++)
+      if (row == col)
+      ELEM(product, row, col) = scalar * ELEM(mtx, row, col);
+  return product;
 }
 
 /** @brief Compute Cholesky Decomposition of matrix A.
