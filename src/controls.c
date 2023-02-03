@@ -182,10 +182,10 @@ void updateSE3Ctrl(SE3Controller *se3,
   /*time derivatives of body axes for excessive attitude tracking performances
   A_dot   = -kx*error_v - kv*error_a + m*jd;
   */
-  matrix* Adot = newMatrix(3,1);
+  matrix* A_dot = newMatrix(3,1);
   sum3Matrix(returnNegMatrix(returnProductMatrix(se3->kx, error_vel)),
              returnNegMatrix(returnProductMatrix(se3->kv, error_acc)),
-             returnProductScalarMatrix(POINT_MASS_KG,des_jerk),Adot);
+             returnProductScalarMatrix(POINT_MASS_KG,des_jerk),A_dot);
 
   /*time derivative of body z*
   b3_c_dot = -A_dot/norm(A) + (vec_dot(A,A_dot)/norm(A)^3)*A;
@@ -194,80 +194,58 @@ void updateSE3Ctrl(SE3Controller *se3,
   float normACube = normA*normA*normA; // another repeatedely used value. Hence compute once and store.
   matrix* ATAdot = newMatrix(1,1); // another repeatedely used value. Hence compute once and store.
   matrix* b3_c_dot = newMatrix(3,1);
-  productMatrix(AT,Adot,ATAdot);
-  sumMatrix(returnProductScalarMatrix(-1/normA, Adot),
+  productMatrix(AT,A_dot,ATAdot);
+  sumMatrix(returnProductScalarMatrix(-1/normA, A_dot),
              returnProductMatrix(returnProductScalarMatrix(1/normACube, ATAdot),A),
-             b3_c_dot);
-  // TODO: continue clean-up from here onwards
-  /*
+             b3_c_dot);  /*
   C_dot   = vec_cross(b3_c_dot, b1_d) + vec_cross(b3_c, b1_d_dot);
   */
-  matrix* b3cdotXb1d = newMatrix(3,1);
-  matrix* b3cXb1ddot = newMatrix(3,1);
-  matrix* C_dot = newMatrix(3,1);
-
-  crossProduct3DVec(b3_c_dot, b1_d, b3cdotXb1d);
-  crossProduct3DVec(b3_c, b1_d_dot, b3cXb1ddot);
-  sumMatrix(b3cdotXb1d,b3cXb1ddot,C_dot);
+  matrix* C_dot = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
+  sumMatrix(returnCrossProduct3DVec(b3_c_dot, b1_d),returnCrossProduct3DVec(b3_c, b1_d_dot),C_dot);
 
   /*time derivative of body y
     b2_c_dot = C/norm(C) - (vec_dot(C,C_dot)/norm(C)^3)*C;
   */
- float normCCube = normC*normC*normC;
-  matrix* CT     = newMatrix(3,1);
-  matrix* CNormd = newMatrix(3,1);
-  matrix* CTCdot = newMatrix(1,1);
-  matrix* CTCdotNormd3 = newMatrix(1,1);
-  matrix* CTCdotNormd3C = newMatrix(3,1);
-  matrix* b2_c_dot = newMatrix(3,1);
+ float normCCube = normC*normC*normC; // another repeatedely used value. Hence compute once and store.
+  matrix* CT     = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
+  matrix* b2_c_dot = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
 
   transposeMatrix(C, CT);
-  productScalarMatrix(1/normC, C, CNormd);
-  productMatrix(CT,C_dot,CTCdot);
-  productScalarMatrix(-1/normCCube,CTCdot,CTCdotNormd3);
-  productMatrix(CTCdotNormd3,C,CTCdotNormd3C);
-  sumMatrix(CNormd, CTCdotNormd3C, b2_c_dot);
+  sumMatrix(returnProductScalarMatrix(1/normC, C),
+            returnProductMatrix(returnProductScalarMatrix(-1/normCCube,returnProductMatrix(CT,C_dot)), C), b2_c_dot);
 
   /*time derivative of body x
     b1_c_dot = vec_cross(b2_c_dot, b3_c) + vec_cross(b2_c, b3_c_dot);
   */
-  matrix* b2cdotXb3c = newMatrix(3,1);
-  matrix* b2cXb3cdot = newMatrix(3,1);
   matrix* b1_c_dot = newMatrix(3,1);
-
-  crossProduct3DVec(b2_c_dot, b3_c, b2cdotXb3c);
-  crossProduct3DVec(b2_c, b3_c_dot, b2cXb3cdot);
-  sumMatrix(b2cdotXb3c,b2cXb3cdot, b1_c_dot);
+  sumMatrix(returnCrossProduct3DVec(b2_c_dot, b3_c),returnCrossProduct3DVec(b2_c, b3_c_dot), b1_c_dot);
 
   /* second time derivatives of body axes
   A_ddot   = -kx*error_a - kv*error_j + m*sd;
   */
-  matrix* A_ddot = newMatrix(3,1);
-  matrix* msd    = newMatrix(3,1);
-  matrix* kxea   = newMatrix(3,1);
-  matrix* kvej   = newMatrix(3,1);
-  matrix* aj     = newMatrix(3,1);
-
-  productScalarMatrix(POINT_MASS_KG, des_snap, msd);
-  productMatrix(se3->kx,error_acc,kxea);
-  productMatrix(se3->kv,error_jerk,kvej);
-  sumMatrix(kxea,kvej,aj);
-  subtractMatrix(msd,aj,A_ddot);
+  matrix* A_ddot = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
+  sum3Matrix(returnNegMatrix(returnProductMatrix(se3->kx,error_acc)),
+             returnNegMatrix(returnProductMatrix(se3->kv,error_jerk)),
+             returnProductScalarMatrix(POINT_MASS_KG, des_snap),A_ddot);
 
   /* second time derivative of body z
   b3_c_ddot = -A_ddot/norm(A) + (2/norm(A)^3)*vec_dot(A,A_dot)*A_dot ...
          + ((norm(A_dot)^2 + vec_dot(A,A_ddot))/norm(A)^3)*A       ...
          - (3/norm(A)^5)*(vec_dot(A,A_dot)^2)*A;
   */
- float normASquared = normA*normA;
- float normA5       = normASquared*normACube;
- matrix* AddotNormd = newMatrix(3,1);
- matrix* ATAdotAdot = newMatrix(3,1);
- matrix* b3_c_ddot_2ndTerm = newMatrix(3,1);
+ float normASquared = normA*normA; // another repeatedely used value. Hence compute once and store.
+ float normA5       = normASquared*normACube; // another repeatedely used value. Hence compute once and store.
+ float normA_dot    = normL2Vec(A_dot);
+ matrix* normA_dotSquared  = newMatrix(1,1); // norm of A_dot will go in there in matrix form
+ matrix* ATAdotSquared = returnProductMatrix(ATAdot,ATAdot);
+ matrix* b3_c_ddot = newMatrix(3,1);
+ setMatrixElement(normA_dotSquared,1,1,normA_dot*normA_dot);
 
- productScalarMatrix(-1/normA, A_ddot,AddotNormd);
- productMatrix(ATAdot,Adot,ATAdotAdot);
- productScalarMatrix(2/normACube,ATAdotAdot,b3_c_ddot_2ndTerm);
+ sum5Matrix(returnProductScalarMatrix(-1/normA, A_ddot),
+            returnProductScalarMatrix(2/normACube, returnProductMatrix(ATAdot,A_dot)),
+            returnProductMatrix(normA_dotSquared,A),
+            returnProductMatrix(returnProductScalarMatrix(1/normACube,returnProductMatrix(AT,A_ddot)),A),
+            returnProductScalarMatrix(-3/normA5,returnProductMatrix(ATAdotSquared,A)),b3_c_ddot);
   // TODO: to be cont.
   // delete all created matrices at the end
 }
