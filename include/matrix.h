@@ -56,6 +56,7 @@ matrix * returnCrossProduct3DVec(matrix * mtx1, matrix * mtx2);
 int sumMatrix(matrix * mtx1, matrix * mtx2, matrix * sum);
 int sum3Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * sum);
 int sum4Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * mtx4, matrix * sum);
+int sum5Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * mtx4, matrix * mtx5, matrix * sum);
 int subtractMatrix(matrix * mtx1, matrix * mtx2, matrix * subtract);
 int productMatrix(matrix * mtx1, matrix * mtx2, matrix * prod);
 int crossProduct3DVec(matrix * mtx1, matrix * mtx2, matrix * crossProd);

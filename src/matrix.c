@@ -259,7 +259,7 @@ int sum3Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * sum)
   return 0;
 }
 
-/* Writes the sum of matrices mtx1, mtx2 and mtx3 into matrix
+/* Writes the sum of matrices mtx1, mtx2, mtx3 and mtx4 into matrix
  * sum. Returns 0 if successful, -1 if any of the matrices
  * are NULL, and -2 if the dimensions of the matrices are
  * incompatible.
@@ -284,6 +284,33 @@ int sum4Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * mtx4, matri
   return 0;
 }
 
+
+/* Writes the sum of matrices mtx1, mtx2, mtx3, mtx4 and mtx5 into matrix
+ * sum. Returns 0 if successful, -1 if any of the matrices
+ * are NULL, and -2 if the dimensions of the matrices are
+ * incompatible.
+ */
+int sum5Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * mtx4, matrix * mtx5, matrix * sum)
+{
+  if (mtx1->rows != mtx2->rows ||
+      mtx1->rows != mtx3->rows ||
+      mtx1->rows != mtx4->rows ||
+      mtx1->rows != mtx5->rows ||
+      mtx1->rows != sum->rows  ||
+      mtx1->cols != mtx2->cols ||
+      mtx1->cols != mtx3->cols ||
+      mtx1->cols != mtx4->cols ||
+      mtx1->cols != mtx5->cols ||
+      mtx1->cols != sum->cols)
+    return -2;
+
+  int row, col;
+  for (col = 1; col <= mtx1->cols; col++)
+    for (row = 1; row <= mtx1->rows; row++)
+      ELEM(sum, row, col) =
+        ELEM(mtx1, row, col) + ELEM(mtx2, row, col) + ELEM(mtx3, row, col) + ELEM(mtx4, row, col) + ELEM(mtx5, row, col);
+  return 0;
+}
 
 /* Writes the subtraction of matrice mtx2 from mtx1 into another matrix
  * Returns 0 if successful, -1 if any of the matrices
