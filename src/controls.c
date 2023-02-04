@@ -104,6 +104,11 @@ void updateSE3Ctrl(SE3Controller *se3,
                     matrix* R, matrix* rotVel,
                     float yawRef, float yawRefDot, float yawRefdDot)
 {
+  // source: https://mathweb.ucsd.edu/~mleok/pdf/LeLeMc2010_quadrotor.pdf
+  // source: https://arxiv.org/abs/1003.2005v1
+  // notice that there are 4 versions of this paper in arxiv.
+  // explicit computations of omega_c, omega_dot_c and R_c, R_c_dot, R_c_ddot are provided here (v2), section F:
+  // https://arxiv.org/pdf/1003.2005v2.pdf
 
   // compute translational errors
   matrix* error_pos = newMatrix(3,1);
