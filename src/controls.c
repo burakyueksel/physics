@@ -108,7 +108,7 @@ void updateSE3Ctrl(SE3Controller *se3,
   // source: https://arxiv.org/abs/1003.2005v1
   // notice that there are 4 versions of this paper in arxiv.
   // explicit computations of omega_c, omega_dot_c and R_c, R_c_dot, R_c_ddot are provided here (v2), section F:
-  // https://arxiv.org/pdf/1003.2005v2.pdf
+  // [1] https://arxiv.org/pdf/1003.2005v2.pdf
 
   // compute translational errors
   matrix* error_pos = newMatrix(3,1);
@@ -122,7 +122,7 @@ void updateSE3Ctrl(SE3Controller *se3,
   subtractMatrix(jerk, des_jerk, error_jerk);
 
   // control thrust and its magnitude
-
+  // see eq.42 and the equations/descriptions after eq. 97 of [1]
   //A = -kx*error_x - kv*error_v - m*g*e3 + m*ad
   matrix* A = newMatrix(3,1);
   sum4Matrix(returnNegMatrix(returnProductMatrix(se3->kx, error_pos)),
@@ -164,6 +164,8 @@ void updateSE3Ctrl(SE3Controller *se3,
   /*vector orthogonal to thrust direction and desired heading.
     this is directing to y axis
   */
+  // see sec F, equations/descriptions after eq. 97 of [1]
+  // C = vec_cross(b3_c, b1_d);
   matrix* C = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
   crossProduct3DVec(b3_c, b1_d, C);
   /*orthonormal desired body y direction
