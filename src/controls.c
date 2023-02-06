@@ -301,6 +301,9 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrixConcatenation(b2_c_dot, b3_c_dot, R_c_dot_23);
   matrixConcatenation(b1_c_dot, R_c_dot_23, R_c_dot);
   deleteMatrix(R_c_dot_23); // remove the temp matrix
+  deleteMatrix(b1_c_dot); // remove temp matrix
+  deleteMatrix(b2_c_dot); // remove temp matrix
+  deleteMatrix(b3_c_dot); // remove temp matrix
 
   /*construct the twice time derivative of the rotation matrix to be tracked: R_c_ddot = [b1_c_ddot b2_c_ddot b3_c_ddot]
   */
@@ -309,10 +312,33 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrixConcatenation(b2_c_ddot, b3_c_ddot, R_c_ddot_23);
   matrixConcatenation(b1_c_ddot, R_c_ddot_23, R_c_ddot);
   deleteMatrix(R_c_ddot_23); // remove the temp matrix
+  deleteMatrix(b1_c_ddot); // remove temp matrix
+  deleteMatrix(b2_c_ddot); // remove temp matrix
+  deleteMatrix(b3_c_ddot); // remove temp matrix
 
-  //TODO: compute omega_c and omega_c_dot, and then finally the torques.
+  /* compute omega_c and omega_c_dot
+  */
+  matrix* R_cT    = newMatrix(3,1);
+  matrix* Omega_c = newMatrix(3,1);
+  matrix* Omega_c_dot = newMatrix(3,1);
+  matrix* Omega_c_dot_hat = newMatrix(3,3);
+  matrix* Omega_c_hat  = newMatrix(3,3);
+
+  transposeMatrix(R_c, R_cT); // R_cT is used multiple times. Compute onces.
+  // Omega_c
+  vee(returnProductMatrix(R_cT,R_c_dot),Omega_c);
+
+  hat(Omega_c, Omega_c_hat); // hat(Omega_c) is used below twice. Compute once.
+  subtractMatrix(returnProductMatrix(R_cT,R_c_ddot),returnProductMatrix(Omega_c_hat,Omega_c_hat), Omega_c_dot_hat);
+  // Omega_c_dot
+  vee(Omega_c_dot_hat, Omega_c_dot);
+
+  //TODO:  errors in R and in omega, and then finally the torques.
 
   // delete all created matrices at the end
+  deleteMatrix(R_cT);
+  deleteMatrix(Omega_c_hat);
+  deleteMatrix(Omega_c_dot_hat);
 }
 
 void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,

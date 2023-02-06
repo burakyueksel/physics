@@ -53,6 +53,8 @@ matrix * returnNegMatrix (matrix* mtx);
 matrix * returnProductMatrix(matrix * mtx1, matrix * mtx2);
 matrix * returnProductScalarMatrix(float scalar, matrix* mtx);
 matrix * returnCrossProduct3DVec(matrix * mtx1, matrix * mtx2);
+matrix * returnVee(matrix * mtx);
+matrix * returnHat(matrix * vec3D);
 int sumMatrix(matrix * mtx1, matrix * mtx2, matrix * sum);
 int sum3Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * sum);
 int sum4Matrix(matrix * mtx1, matrix * mtx2, matrix * mtx3, matrix * mtx4, matrix * sum);
