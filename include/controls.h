@@ -29,7 +29,8 @@ typedef struct
   matrix* kR;
   matrix* kOmega;
   matrix* e3;
-  matrix* ctrlForces_N;
+  matrix* J_kgm2;
+  matrix* ctrlThrust_N;
   matrix* ctrlMoments_Nm;
 } SE3Controller;
 

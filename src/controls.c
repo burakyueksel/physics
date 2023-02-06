@@ -49,7 +49,19 @@ void initSE3Ctrl(SE3Controller *se3)
   setMatrixElement(se3->kOmega,  2,  2,  2.54);
   setMatrixElement(se3->kOmega,  3,  3,  2.54);
 
-  se3->ctrlForces_N = newMatrix(3,1);   // Fx, Fy, Fz
+  se3->J_kgm2 = newMatrix(3,3);
+  /*set the moment of inertia terms*/
+  setMatrixElement(se3->J_kgm2, 1, 1, POINT_I_XX_KGM2);//Ixx
+  setMatrixElement(se3->J_kgm2, 2, 2, POINT_I_YY_KGM2);//IYY
+  setMatrixElement(se3->J_kgm2, 3, 3, POINT_I_ZZ_KGM2);//IZZ
+  setMatrixElement(se3->J_kgm2, 1, 2, POINT_I_XY_KGM2);//IXY
+  setMatrixElement(se3->J_kgm2, 2, 1, POINT_I_XY_KGM2);//IYX=IXY
+  setMatrixElement(se3->J_kgm2, 1, 3, POINT_I_XZ_KGM2);//IXZ
+  setMatrixElement(se3->J_kgm2, 3, 1, POINT_I_XZ_KGM2);//IZX=IXZ
+  setMatrixElement(se3->J_kgm2, 2, 3, POINT_I_YZ_KGM2);//IYZ
+  setMatrixElement(se3->J_kgm2, 3, 2, POINT_I_YZ_KGM2);//IZY=IYZ
+
+  se3->ctrlThrust_N = newMatrix(1,1);   // Fz
   se3->ctrlMoments_Nm = newMatrix(3,1); // Mx, My, Mz
 }
 
@@ -130,10 +142,10 @@ void updateSE3Ctrl(SE3Controller *se3,
              returnNegMatrix(returnProductScalarMatrix(POINT_MASS_KG*ENV_GRAVITY_MPS2, se3->e3)),
              returnProductScalarMatrix(POINT_MASS_KG, des_acc), A);
   //f = vec_dot(-A, R*e3); // equal to -transpose(A)*R*e3
-  matrix* f     = newMatrix(3,1);
-  matrix* AT    = newMatrix(3,1);// we will use AT later. Hence compute it once and store it.
+  // f = se3->ctrlThrust_N
+  matrix* AT    = newMatrix(1,3);// we will use AT later. Hence compute it once and store it.
   transposeMatrix(A, AT);
-  productMatrix(returnNegMatrix(AT),returnProductMatrix(R,se3->e3),f);
+  productMatrix(returnNegMatrix(AT),returnProductMatrix(R,se3->e3),se3->ctrlThrust_N);
   // desired heading as function of yaw and its derivatives
   matrix* b1_d          = newMatrix(3,1);
   matrix* b1_d_dot      = newMatrix(3,1);
@@ -317,6 +329,8 @@ void updateSE3Ctrl(SE3Controller *se3,
   deleteMatrix(b3_c_ddot); // remove temp matrix
 
   /* compute omega_c and omega_c_dot
+  Omega_c      = vee(R_c'*R_c_dot);
+  Omega_c_dot  = vee(R_c'*R_c_ddot - hat(Omega_c)*hat(Omega_c));
   */
   matrix* R_cT    = newMatrix(3,1);
   matrix* Omega_c = newMatrix(3,1);
@@ -333,12 +347,55 @@ void updateSE3Ctrl(SE3Controller *se3,
   // Omega_c_dot
   vee(Omega_c_dot_hat, Omega_c_dot);
 
-  //TODO:  errors in R and in omega, and then finally the torques.
+  /* proper error definition in SO3 and in its tangent
+  compute error_R and error_Omega
+  error_R     = (1/2)*vee(R_c.'*R - R.'*R_c);
+  error_Omega = Omega - R.'*R_c*Omega_c;
+  */
+  matrix* error_R = newMatrix(3,1);
+  matrix* error_R_hat = newMatrix(3,3);
+  matrix* error_Omega = newMatrix(3,1);
+  matrix* RTRc = newMatrix(3,3);
+  matrix* RcTR = newMatrix(3,3);
+  matrix* RTRcOmegaC = newMatrix(3,1);
 
-  // delete all created matrices at the end
-  deleteMatrix(R_cT);
+  productMatrix(returnTransposedMatrix(R),R_c,RTRc);
+  productMatrix(returnTransposedMatrix(R_c),R,RcTR);
+  subtractMatrix(RcTR,RTRc,error_R_hat);
+
+  productScalarMatrix(0.5, returnVee(error_R_hat),error_R);
+  productMatrix(RTRc, Omega_c, RTRcOmegaC);
+
+  subtractMatrix(rotVel, RTRcOmegaC, error_Omega);
+
+  /* finally the control torques
+    M = -kR*error_R - kOmega*error_Omega + vec_cross(Omega, J*Omega) ...
+    - J*(hat(Omega)*R.'*R_c*Omega_c - R.'*R_c*Omega_c_dot);
+  */
+  sum5Matrix(returnProductMatrix(returnNegMatrix(se3->kR), error_R),
+             returnProductMatrix(returnNegMatrix(se3->kOmega), error_Omega),
+             returnCrossProduct3DVec(rotVel, returnProductMatrix(se3->J_kgm2,rotVel)),
+             returnNegMatrix(returnProductMatrix(se3->J_kgm2,returnProductMatrix(returnHat(rotVel),RTRcOmegaC))),
+             returnProductMatrix(RTRc, Omega_c_dot),
+             se3->ctrlMoments_Nm);
+
+  // free memory: delete all "explicitly created" matrices at the end
+  deleteMatrix(error_pos);
+  deleteMatrix(error_vel);
+  deleteMatrix(error_acc);
+  deleteMatrix(error_jerk);
+  deleteMatrix(error_R);
+  deleteMatrix(error_R_hat);
+  deleteMatrix(error_Omega);
+  deleteMatrix(RTRc);
+  deleteMatrix(RcTR);
   deleteMatrix(Omega_c_hat);
   deleteMatrix(Omega_c_dot_hat);
+  deleteMatrix(RTRcOmegaC);
+
+  // IMPORTANT: returnX functions create new matrices inside their functions (see matrix.c)
+  // which are NOT deleted. This possibly creates excessive usage of memory for everytime calling a returnX function.
+  // I have implemented returnX function for better coding style. For better memory allocation this might need another revision.
 }
 
 void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
