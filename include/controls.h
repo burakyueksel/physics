@@ -29,6 +29,7 @@ typedef struct
   matrix* kR;
   matrix* kOmega;
   matrix* e3;
+  float mass_kg;
   matrix* J_kgm2;
   matrix* ctrlThrust_N;
   matrix* ctrlMoments_Nm;

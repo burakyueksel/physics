@@ -50,6 +50,9 @@ void initSE3Ctrl(SE3Controller *se3)
   setMatrixElement(se3->kOmega,  2,  2,  2.54);
   setMatrixElement(se3->kOmega,  3,  3,  2.54);
 
+  /*set the mass*/
+  se3->mass_kg = POINT_MASS_KG;
+
   se3->J_kgm2 = newMatrix(3,3);
   /*set the moment of inertia terms*/
   setMatrixElement(se3->J_kgm2, 1, 1, POINT_I_XX_KGM2);//Ixx
@@ -183,8 +186,8 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrix* A = newMatrix(3,1);
   sum4Matrix(returnNegMatrix(returnProductMatrix(se3->kx, error_pos)),
              returnNegMatrix(returnProductMatrix(se3->kv, error_vel)),
-             returnNegMatrix(returnProductScalarMatrix(POINT_MASS_KG*ENV_GRAVITY_MPS2, se3->e3)),
-             returnProductScalarMatrix(POINT_MASS_KG, des_acc), A);
+             returnNegMatrix(returnProductScalarMatrix(se3->mass_kg*ENV_GRAVITY_MPS2, se3->e3)),
+             returnProductScalarMatrix(se3->mass_kg, des_acc), A);
   //f = vec_dot(-A, R*e3); // equal to -transpose(A)*R*e3
   // f = se3->ctrlThrust_N
   matrix* AT    = newMatrix(1,3);// we will use AT later. Hence compute it once and store it.
@@ -248,7 +251,7 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrix* A_dot = newMatrix(3,1);
   sum3Matrix(returnNegMatrix(returnProductMatrix(se3->kx, error_vel)),
              returnNegMatrix(returnProductMatrix(se3->kv, error_acc)),
-             returnProductScalarMatrix(POINT_MASS_KG,des_jerk),A_dot);
+             returnProductScalarMatrix(se3->mass_kg,des_jerk),A_dot);
 
   /*time derivative of body z*
   b3_c_dot = -A_dot/norm(A) + (vec_dot(A,A_dot)/norm(A)^3)*A;
@@ -292,7 +295,7 @@ void updateSE3Ctrl(SE3Controller *se3,
   matrix* A_ddot = newMatrix(3,1); // another repeatedely used value. Hence compute once and store.
   sum3Matrix(returnNegMatrix(returnProductMatrix(se3->kx,error_acc)),
              returnNegMatrix(returnProductMatrix(se3->kv,error_jerk)),
-             returnProductScalarMatrix(POINT_MASS_KG, des_snap),A_ddot);
+             returnProductScalarMatrix(se3->mass_kg, des_snap),A_ddot);
 
   /* second time derivative of body z
   b3_c_ddot = -A_ddot/norm(A) + (2/norm(A)^3)*vec_dot(A,A_dot)*A_dot ...
