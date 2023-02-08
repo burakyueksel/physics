@@ -22,6 +22,7 @@ void initPID(PIDController *pid, float kp, float ki, float kd)
   pid->prev_error = 0;
 }
 
+// init full se3 controller
 void initSE3Ctrl(SE3Controller *se3)
 {
   se3->e3 = newMatrix(3,1); // [0;0;1] unit vector (gravity direction in NED)
@@ -65,6 +66,7 @@ void initSE3Ctrl(SE3Controller *se3)
   se3->ctrlMoments_Nm = newMatrix(3,1); // Mx, My, Mz
 }
 
+// init tilt prioritizing attitude controller
 void initTiltPrioCtrl(TiltPrioCtrl *tiltCtrl)
 {
   // source:https://www.flyingmachinearena.ethz.ch/wp-content/publications/2018/breTCST18.pdf
@@ -97,6 +99,48 @@ void initTiltPrioCtrl(TiltPrioCtrl *tiltCtrl)
   setMatrixElement(tiltCtrl->J_kgm2, 3, 2, POINT_I_YZ_KGM2);//IZY=IYZ
 
   tiltCtrl->ctrlMoments_Nm = newMatrix(3,1);
+}
+
+void initIDAPBCCtrl(IDAPBCCtrl *idapbc)
+{
+  // source 1: Conference paper: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
+  // source 2: Journal paper: https://journals.sagepub.com/doi/full/10.1177/0278364919835605
+  // source 3: Ch 4 of thesis https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
+
+  /*precompensation controller gains*/
+  idapbc->KD_eta = newMatrix(3,3);
+  float omega = 0.3;
+  float damping = 1.0;
+  //float kp_eta = omega*omega // to be used for the desired rotational potential energy
+  float kd_eta = 2*omega*damping;
+  setMatrixElement(idapbc->KD_eta,  1,  1,  kd_eta);
+  setMatrixElement(idapbc->KD_eta,  2,  2,  kd_eta);
+  setMatrixElement(idapbc->KD_eta,  3,  3,  kd_eta);
+  /*damping injection gains*/
+  idapbc->kT_bar = 1.0f;
+  idapbc->KR_bar = copyMatrix(idapbc->KD_eta);
+  /*set the real mass*/
+  idapbc->mass_kg = POINT_MASS_KG;
+  /*set the desired mass*/
+  idapbc->mass_des_kg = 1.5*POINT_MASS_KG;
+
+  /*set the moment of inertia terms*/
+  idapbc->J_kgm2 = newMatrix(3,3);
+  setMatrixElement(idapbc->J_kgm2, 1, 1, POINT_I_XX_KGM2);//Ixx
+  setMatrixElement(idapbc->J_kgm2, 2, 2, POINT_I_YY_KGM2);//IYY
+  setMatrixElement(idapbc->J_kgm2, 3, 3, POINT_I_ZZ_KGM2);//IZZ
+  setMatrixElement(idapbc->J_kgm2, 1, 2, POINT_I_XY_KGM2);//IXY
+  setMatrixElement(idapbc->J_kgm2, 2, 1, POINT_I_XY_KGM2);//IYX=IXY
+  setMatrixElement(idapbc->J_kgm2, 1, 3, POINT_I_XZ_KGM2);//IXZ
+  setMatrixElement(idapbc->J_kgm2, 3, 1, POINT_I_XZ_KGM2);//IZX=IXZ
+  setMatrixElement(idapbc->J_kgm2, 2, 3, POINT_I_YZ_KGM2);//IYZ
+  setMatrixElement(idapbc->J_kgm2, 3, 2, POINT_I_YZ_KGM2);//IZY=IYZ
+
+  /*set the desired moment of inertia terms*/
+  idapbc->J_des_kgm2 = copyMatrix(idapbc->J_kgm2);
+
+  idapbc->ctrlThrust_N = newMatrix(1,1);   // Fz
+  idapbc->ctrlMoments_Nm = newMatrix(3,1); // Mx, My, Mz
 }
 
 // Update PID controller

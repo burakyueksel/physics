@@ -43,12 +43,26 @@ typedef struct
   matrix* ctrlMoments_Nm;
 } TiltPrioCtrl;
 
+typedef struct
+{
+  matrix* KR_bar;
+  matrix* KD_eta;
+  float kT_bar;
+  float mass_kg;
+  float mass_des_kg;
+  matrix* J_kgm2;
+  matrix* J_des_kgm2;
+  matrix* ctrlThrust_N;
+  matrix* ctrlMoments_Nm;
+} IDAPBCCtrl;
+
 
 
 //void ctrlInit(PIDController* pid);
 void initPID(PIDController* pid, float kp, float ki, float kd);
 void initSE3Ctrl(SE3Controller *se3);
 void initTiltPrioCtrl(TiltPrioCtrl *tltCtl);
+void initIDAPBCCtrl(IDAPBCCtrl * idapbcCtrl);
 
 float updatePID(PIDController *pid, float error, float dt);
 
