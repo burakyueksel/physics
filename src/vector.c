@@ -63,3 +63,57 @@ int getQuaternionVectorPart(quaternion q, matrix* qv)
   setMatrixElement(qv,3,1,q.z);
   return 1;
 }
+
+int bodyRates2EulerRates(matrix* eul_rad, matrix* bodyRates_rps, matrix* eulerRates_rps)
+{
+  // source [1]: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
+  // bodyRates_rps and eulerRates_rps should be defined 3x1 matrices (rows x cols)
+  if (bodyRates_rps->cols != 1 || bodyRates_rps->rows != 3 ||
+      eulerRates_rps->cols != 1 || eulerRates_rps->rows != 3) return 0; // failure
+  // get the angle and the body rates explicitly for better code readability
+  float roll = ELEM(eul_rad,1,1);
+  float pitch = ELEM(eul_rad,2,1);
+  //float yaw = ELEM(eul_rad,3,1); // not used.
+
+  float p = ELEM(bodyRates_rps,1,1);
+  float q = ELEM(bodyRates_rps,2,1);
+  float r = ELEM(bodyRates_rps,3,1);
+  // compute the trigonometric relations once and store
+  float sin_roll = sin(roll);
+  float cos_roll = cos(roll);
+  float tan_pitch = tan(pitch);
+  float cos_pitch = cos(pitch);
+  // see eq. (2.2) of [1];
+  setMatrixElement(eulerRates_rps,1,1, p + q*sin_roll/tan_pitch + r*cos_roll/tan_pitch); //p
+  setMatrixElement(eulerRates_rps,2,1,     q*cos_roll           - r*sin_roll);           //q
+  setMatrixElement(eulerRates_rps,3,1,   + q*sin_roll/cos_pitch + r*cos_roll/cos_pitch); //r
+
+  return 1; // success.
+}
+
+int eulerRates2BodyRates(matrix* eul_rad, matrix* eulerRates_rps, matrix* bodyRates_rps)
+{
+  // source [1]: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
+  // bodyRates_rps and eulerRates_rps should be defined 3x1 matrices (rows x cols)
+  if (bodyRates_rps->cols != 1 || bodyRates_rps->rows != 3 ||
+      eulerRates_rps->cols != 1 || eulerRates_rps->rows != 3) return 0; // failure
+  // get the angle and the body rates explicitly for better code readability
+  float roll = ELEM(eul_rad,1,1);
+  float pitch = ELEM(eul_rad,2,1);
+  //float yaw = ELEM(eul_rad,3,1); // not used.
+
+  float roll_dot = ELEM(eulerRates_rps,1,1);
+  float pitch_dot = ELEM(eulerRates_rps,2,1);
+  float yaw_dot = ELEM(eulerRates_rps,3,1);
+  // compute the trigonometric relations once and store
+  float sin_roll = sin(roll);
+  float cos_roll = cos(roll);
+  float sin_pitch = sin(pitch);
+  float cos_pitch = cos(pitch);
+  // see eq. (2.2) of [1];
+  setMatrixElement(bodyRates_rps,1,1, roll_dot                        -sin_pitch*yaw_dot);
+  setMatrixElement(bodyRates_rps,2,1,           cos_roll*pitch_dot    +sin_roll*cos_pitch*yaw_dot);
+  setMatrixElement(bodyRates_rps,3,1,          -sin_roll*pitch_dot    +cos_roll*cos_pitch*yaw_dot);
+
+  return 1; // success.
+}

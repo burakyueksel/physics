@@ -494,6 +494,44 @@ void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
   deleteMatrix(qv_e_yaw);
 }
 
+void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps)
+{
+  // source [1]: https://hal.laas.fr/hal-01964753/file/2019b-YueSecBueFra-preprint.pdf
+
+  /*compute the precompensating control input
+    which turns multirotor rigid body dynamics (rotational part) into
+    a port-hamiltonian model as a whole (both translational and rotational), as shown in eq. (10).
+
+    Important: in [1] this is presented with eq. (8), because this equation explicitly shows the relations.
+    Although it brings mathematical clarity, we do not need to implement eq. (8); in fact we should not.
+
+    What we implement is the following (rotational dynamics precompensation)
+
+    u_r_bar_Nm = w x Jw - kd * eta_dot
+
+    Notice: above equation does two things:
+    1- it cancels the nonlinear terms,
+    2- assumes tau_ext = 0
+
+    Together this term does the same job as eq. (8) of [1].
+
+    Assuming tau_ext = 0 in precomensation is a valid assumption, since the dissipating term kd*eta_dot provides local stability.
+    Meaning, under bounded external disturbances and sufficiently high kd term (but low enough for not amplifiying noises coming from eta_dot)
+    we can exclude using tau_ext in the control input computation.
+
+    Following gives the above presented simpler version of the precomensation control input term.
+  */
+
+    matrix* u_r_bar_Nm = newMatrix(3,1);
+    matrix* omegaXJomega = newMatrix(3,1);
+    matrix* eta_dot_rps = newMatrix(3,1);
+
+    bodyRates2EulerRates(eul_rad, omega_rps, eta_dot_rps); // we have now euler rates.
+
+    crossProduct3DVec(omega_rps, returnProductMatrix(idapbc->J_kgm2, omega_rps), omegaXJomega);
+    subtractMatrix(omegaXJomega, returnProductMatrix(idapbc->KD_eta, eta_dot_rps), u_r_bar_Nm);
+}
+
 /*
 void ctrlInit(PIDController* pid)
 {
