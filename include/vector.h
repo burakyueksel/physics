@@ -42,5 +42,7 @@ void quaternionProduct(quaternion q1, quaternion q2, quaternion* q1xq2);
 void quaternionInverse(quaternion q, quaternion* q_inverse);
 float quaternionZAlignNorm(quaternion q);
 int getQuaternionVectorPart(quaternion q, matrix* qv);
+int bodyRates2EulerRates(matrix* eul_rad, matrix* bodyRates_rps, matrix* eulerRates_rps);
+int eulerRates2BodyRates(matrix* eul_rad, matrix* eulerRates_rps, matrix* bodyRates_rps);
 
 #endif // VECTOR_H_
