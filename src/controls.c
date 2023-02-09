@@ -112,13 +112,20 @@ void initIDAPBCCtrl(IDAPBCCtrl *idapbc)
 
   /*precompensation controller gains*/
   idapbc->KD_eta = newMatrix(3,3);
+  idapbc->KP_des_eta = newMatrix(3,3);
   float omega = 0.3;
   float damping = 1.0;
-  //float kp_eta = omega*omega // to be used for the desired rotational potential energy
-  float kd_eta = 2*omega*damping;
+  float kp_eta = omega*omega; // used for the desired rotational potential energy
+  float kd_eta = 2*omega*damping; // used for the precomensation control input
+
   setMatrixElement(idapbc->KD_eta,  1,  1,  kd_eta);
   setMatrixElement(idapbc->KD_eta,  2,  2,  kd_eta);
   setMatrixElement(idapbc->KD_eta,  3,  3,  kd_eta);
+
+  setMatrixElement(idapbc->KP_des_eta,  1,  1,  kp_eta);
+  setMatrixElement(idapbc->KP_des_eta,  2,  2,  kp_eta);
+  setMatrixElement(idapbc->KP_des_eta,  3,  3,  kp_eta);
+
   /*damping injection gains*/
   idapbc->kT_bar = 1.0f;
   idapbc->KR_bar = copyMatrix(idapbc->KD_eta);
@@ -141,6 +148,9 @@ void initIDAPBCCtrl(IDAPBCCtrl *idapbc)
 
   /*set the desired moment of inertia terms*/
   idapbc->J_des_kgm2 = copyMatrix(idapbc->J_kgm2);
+
+  /* inverse of the desired moment of inertia*/
+  invertDiagonalMatrix(idapbc->J_des_kgm2, idapbc->J_des_inv_kgm2);
 
   idapbc->ctrlThrust_N = newMatrix(1,1);   // Fz
   idapbc->ctrlMoments_Nm = newMatrix(3,1); // Mx, My, Mz
@@ -494,42 +504,111 @@ void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
   deleteMatrix(qv_e_yaw);
 }
 
-void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps)
+void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps, matrix* eul_des_rad)
 {
   // source [1]: https://hal.laas.fr/hal-01964753/file/2019b-YueSecBueFra-preprint.pdf
+  // source [2]: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
 
-  /*compute the precompensating control input
-    which turns multirotor rigid body dynamics (rotational part) into
-    a port-hamiltonian model as a whole (both translational and rotational), as shown in eq. (10).
+  /* This controller is developed for controlling the physical interaction behavior of aerial robots, which are
+     multirotor platformms with n number of actuators, where all actuators face upwards. This means underactuated systems
+     where 4 control inputs control the physically interacting aircraft in 6 dimensional space (3 position and 3 rotation).
 
-    Important: in [1] this is presented with eq. (8), because this equation explicitly shows the relations.
-    Although it brings mathematical clarity, we do not need to implement eq. (8); in fact we should not.
-
-    What we implement is the following (rotational dynamics precompensation)
-
-    u_r_bar_Nm = w x Jw - kd * eta_dot
-
-    Notice: above equation does two things:
-    1- it cancels the nonlinear terms,
-    2- assumes tau_ext = 0
-
-    Together this term does the same job as eq. (8) of [1].
-
-    Assuming tau_ext = 0 in precomensation is a valid assumption, since the dissipating term kd*eta_dot provides local stability.
-    Meaning, under bounded external disturbances and sufficiently high kd term (but low enough for not amplifiying noises coming from eta_dot)
-    we can exclude using tau_ext in the control input computation.
-
-    Following gives the above presented simpler version of the precomensation control input term.
+     Control consists of 4 parts:
+     0 - precompensating term for turning a rigid body dynamics model of a multirotor into a Port-Hamiltonian (PH) system
+     1 - energy shaping
+     2 - damping injection
+     3 - external disturbance compensation
   */
 
-    matrix* u_r_bar_Nm = newMatrix(3,1);
+  /* 0. Compute the precompensating control input
+        This term turns multirotor rigid body dynamics (rotational part) into
+        a port-hamiltonian model as a whole (both translational and rotational), as shown in eq. (10).
+
+        Important: in [1] this is presented with eq. (8), because this equation explicitly shows the relations.
+        Although it brings mathematical clarity, we do not need to implement eq. (8); in fact we should not.
+
+        What we implement is the following (rotational dynamics precompensation)
+
+        u_r_precomp_Nm = w x Jw - kd * eta_dot
+
+        Notice: above equation does two things:
+        1- it cancels the nonlinear terms,
+        2- assumes tau_ext = 0
+
+        Together this term does the same job as eq. (8) of [1].
+
+        Assuming tau_ext = 0 in precomensation is a valid assumption, since the dissipating term kd*eta_dot provides local stability.
+        Meaning, under bounded external disturbances and sufficiently high kd term (but low enough for not amplifiying noises coming from eta_dot)
+        we can exclude using tau_ext in the control input computation.
+
+        Following gives the above presented simpler version of the precomensation control input term.
+
+        The implementation will result in the following:
+
+        u_r_Nm = u_r_precomp_Nm + u_r_bar_Nm
+
+        u_r_Nm is the final control torque input to the multirotor (rotational dynamics). We will store it at the end in idapbc->ctrlMoments_Nm
+        u_r_precomp_Nm is the simplified version of eq. (8) as explained above
+        u_r_bar_Nm is the novelty of [1], which will bring all the energy shaping control terms.
+  */
+
+    matrix* u_r_precomp_Nm = newMatrix(3,1);
     matrix* omegaXJomega = newMatrix(3,1);
     matrix* eta_dot_rps = newMatrix(3,1);
 
     bodyRates2EulerRates(eul_rad, omega_rps, eta_dot_rps); // we have now euler rates.
 
     crossProduct3DVec(omega_rps, returnProductMatrix(idapbc->J_kgm2, omega_rps), omegaXJomega);
-    subtractMatrix(omegaXJomega, returnProductMatrix(idapbc->KD_eta, eta_dot_rps), u_r_bar_Nm);
+    subtractMatrix(omegaXJomega, returnProductMatrix(idapbc->KD_eta, eta_dot_rps), u_r_precomp_Nm);
+
+    // free memory where you can
+    deleteMatrix(omegaXJomega);
+
+    // now let us compute the rest of the ida-pbc controller step by step.
+
+    /* 1. Energy Shaping. See Sec.2.3.1 of [1]. See eq. (20).
+          First thing you should notice: If you compute the partial derivatives yourself with a
+          piece of paper and pancil you will see that the control thrust is zero. This makes sense for the following reasons:
+
+          - Energy shaping part of the controller does computations under perfect vacuum (Hamiltonian is sum of potential and kineatic energies)
+          and dissipations are left to the second stage. In vacuum, two different masses accelerate the same under the same gravitational effect,
+          hence original vs desired mass does not make any difference. This is the reason we have the mass scaling terms.
+          - The choice of desired hamiltonian in eq. (16) and (21) introduces only the gravitational potential energy in the translational dimensions.
+
+          Hence only contribution of this part will be to the rotational dynamics.
+
+          In [1] the desired rotational potential energy is chosen as in (22), which satisfies the PDE solution requirements
+          (so caled matching equations) explained in eq. (4.21-4.25) of [2].
+
+          Also, we will compute pseudo inverse of the control input matrix explicitly for reducing computational complexities.
+          For that reason we need to make a choice for the multirotor platform design already.
+          Here we will decide for an n-actuator design, where ALL actuators are facing upwards w.r.t. the body of the multirotor
+          platform (could be octo, quad, hexa, etc). For different designs (tilted rotors etc) this part needs to be changed.
+    */
+
+   // compute the pseudo inverse of the G matrix explicitly for efficiency. See in [1] eq. (4) and the sentece after.
+   matrix* G_cross = newMatrix(4,6);
+   // TODO: G_cross to be computed
+   matrix* u_es = newMatrix(4,1);
+   // u_es = G_cross * f_es, so f_es is the partial derivative terms of eq. (22), here written explicitly after hand computations.
+   matrix* f_es = newMatrix(6,1);
+   /* f_es = parder(H,q) - M*M_d^-1 * parder(Hd,q)
+                                   _             _
+             [0, 0, 0, -mg, 0, 0, 0]^T - | m/md    0     |[0, 0, -m_dg, kp_roll*roll_err, kp_roll*pitch_err, kp_roll*yaw_err]^T
+                                         |_ 0    J_d^-1 _|
+
+            = [0, 0, 0, J_d^-1 * KP_eta * eta_error]
+  */
+   // euler angle errors
+   matrix* eta_error = newMatrix(3,1);
+   subtractMatrix(eul_des_rad, eul_rad, eta_error);
+   // first 3 elements of f_es are zero because newMatrix assigns all elements zero in the beginning. So let us set the last three terms.
+   // IMPORTANT: assuming J_des_inv_kgm2 and KP_des_eta are both diagonal matrices (otherwise matrix multiplication should be written)
+   setMatrixElement(f_es, 4, 1, ELEM(idapbc->J_des_inv_kgm2, 1, 1)* ELEM(idapbc->KP_des_eta,1, 1) * ELEM(eta_error, 1, 1));
+   setMatrixElement(f_es, 5, 1, ELEM(idapbc->J_des_inv_kgm2, 2, 2)* ELEM(idapbc->KP_des_eta,2, 2) * ELEM(eta_error, 2, 1));
+   setMatrixElement(f_es, 6, 1, ELEM(idapbc->J_des_inv_kgm2, 3, 3)* ELEM(idapbc->KP_des_eta,3, 3) * ELEM(eta_error, 3, 1));
+   // compute u_es
+   productMatrix(G_cross,f_es,u_es);
 }
 
 /*
