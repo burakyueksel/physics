@@ -77,5 +77,5 @@ void updateSE3Ctrl(SE3Controller *se3,
 void updateTiltPrioCtrl(TiltPrioCtrl *tltCtl, matrix* rotVel, quaternion q,
                                              matrix* rotVelDes, quaternion qDes,
                                              matrix* rotVelDotEst);
-void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps, matrix* eul_des_rad);
+void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* rotMat, matrix* eul_rad, matrix* omega_rps, matrix* eul_des_rad);
 #endif // CONTROLS_H_
