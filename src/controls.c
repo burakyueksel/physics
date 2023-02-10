@@ -504,7 +504,7 @@ void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
   deleteMatrix(qv_e_yaw);
 }
 
-void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps, matrix* eul_des_rad)
+void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* rotMat, matrix* eul_rad, matrix* omega_rps, matrix* eul_des_rad)
 {
   // source [1]: https://hal.laas.fr/hal-01964753/file/2019b-YueSecBueFra-preprint.pdf
   // source [2]: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
@@ -567,12 +567,20 @@ void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps, ma
     // now let us compute the rest of the ida-pbc controller step by step.
 
     /* 1. Energy Shaping. See Sec.2.3.1 of [1]. See eq. (20).
+          Idea: Physical systems (in this example mechanical ones) can be seen as energy storing and exchanging systems.
+                They store kinetic and potential energies (other forms of energies are neglected), and they change it from one to another
+                (kinetic to potential and vice versa)
+                depending on their state and external disturbances. In PH systems we imagine this exchange happening via "ports", which
+                do not consume any additional energy during exchange. Hence the name "Port-Hamiltonian", where the total energy of the system is called
+                Hamiltonian. In this part of the controller we will focus only on the "pure energy exchange without loss". Energy losses due to dissipation
+                e.g. friction, damping, etc are considered in the second step of the controller.
+
           First thing you should notice: If you compute the partial derivatives yourself with a
           piece of paper and pancil you will see that the control thrust is zero. This makes sense for the following reasons:
 
           - Energy shaping part of the controller does computations under perfect vacuum (Hamiltonian is sum of potential and kineatic energies)
           and dissipations are left to the second stage. In vacuum, two different masses accelerate the same under the same gravitational effect,
-          hence original vs desired mass does not make any difference. This is the reason we have the mass scaling terms.
+          hence original vs desired mass does not make any difference. This is the reason we have the mass scaling terms in the equations.
           - The choice of desired hamiltonian in eq. (16) and (21) introduces only the gravitational potential energy in the translational dimensions.
 
           Hence only contribution of this part will be to the rotational dynamics.
@@ -588,12 +596,35 @@ void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps, ma
 
    // compute the pseudo inverse of the G matrix explicitly for efficiency. See in [1] eq. (4) and the sentece after.
    matrix* G_cross = newMatrix(4,6);
-   // TODO: G_cross to be computed
-   matrix* u_es = newMatrix(4,1);
+   /* G_cross is the pseudo inverse of G matrix, where
+           _         _
+      G = | -R*e3  0  | and G_cross = (G^T*G)^-1*G^T
+          |_ 0     I _|
+
+      where R*e3 is the third column of the rotationa matrix [R31 R32 R33]^T and I is a 3x3 identity matrix.
+      If you do the computations explicitly, you will find the following:
+
+      r3_square = R31^2 + R32^2 + R33^2
+                  _                                  _
+                 |  -R31/r3_square    0     0     0   |
+                 |  -R32/r3_square    0     0     0   |
+      G_cross =  |  -R33/r3_square    0     0     0   |
+                 |      0             1     0     0   |
+                 |      0             0     1     0   |
+                 |_     0             0     0     1  _|
+   */
+   float r3_square = ELEM(rotMat,3,1)*ELEM(rotMat,3,1) + ELEM(rotMat,3,2)*ELEM(rotMat,3,2) + ELEM(rotMat,3,3)*ELEM(rotMat,3,3);
+   setMatrixElement(G_cross,1,1,-ELEM(rotMat,3,1)/r3_square);
+   setMatrixElement(G_cross,2,1,-ELEM(rotMat,3,2)/r3_square);
+   setMatrixElement(G_cross,3,1,-ELEM(rotMat,3,3)/r3_square);
+   setMatrixElement(G_cross,4,2, 1.0);
+   setMatrixElement(G_cross,5,3, 1.0);
+   setMatrixElement(G_cross,6,4, 1.0);
    // u_es = G_cross * f_es, so f_es is the partial derivative terms of eq. (22), here written explicitly after hand computations.
+   matrix* u_es = newMatrix(4,1);
    matrix* f_es = newMatrix(6,1);
    /* f_es = parder(H,q) - M*M_d^-1 * parder(Hd,q)
-                                   _             _
+                                          _             _
              [0, 0, 0, -mg, 0, 0, 0]^T - | m/md    0     |[0, 0, -m_dg, kp_roll*roll_err, kp_roll*pitch_err, kp_roll*yaw_err]^T
                                          |_ 0    J_d^-1 _|
 
@@ -609,6 +640,29 @@ void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* eul_rad, matrix* omega_rps, ma
    setMatrixElement(f_es, 6, 1, ELEM(idapbc->J_des_inv_kgm2, 3, 3)* ELEM(idapbc->KP_des_eta,3, 3) * ELEM(eta_error, 3, 1));
    // compute u_es
    productMatrix(G_cross,f_es,u_es);
+
+   /* Concluding remark for u_es:
+   The explicit implementation shows that the choice of the desired energy functions (hence the physical behavior) affects the structure of the energy
+   shaping controller dramatically. Having the desired Hamiltonian very similar to the original one (and hence in the class of standard mechanical systems)
+   brings simplicity in implementation. Finally, u_es acts like a torsional spring, where its parameters are tuned for a desired moment of inertia behavior.
+   More exoctic desired energy funcctions can be choosen for different goals, which would change u_es. In that case, go to [1] and [2] for the implicit
+   computations of u_es, so that you can create your own explicit version of it before implementing for more efficient computation.
+
+   */
+
+   /* 2. Damping Injection.
+      This part of the controller regulates the way system dissipates its energy (no more pure energy exchange).
+      Dissipation happens all the time, due to friction, damping, etc, which reduces the total energy of the system stored as kinetic and potential
+      and usually results as "loss of kinetic + potential = Hamiltonian" in terms of heat.
+
+      Although dissipation results in loss of useful energy, it also increases the stability of the system. Imagine a brake of a car or a parachute.
+      A proper and nonzero damping injection puts a negative definite upper bound to the time derivative of a Lyapunov candidate,
+      which turns an unstable (or even stable) system to an assymptotically stable one.
+      See Section C.2 of [2] for more details for the stability theory.
+
+      In this part we control the dissipation behavior of the newly shaped physics using damping injection method.
+   */
+  // eq. (24) and the third line of eq. (29) of [1] show the damping injection control input u_di
 }
 
 /*
