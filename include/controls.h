@@ -46,10 +46,9 @@ typedef struct
 
 typedef struct
 {
-  matrix* KR_bar;
+  matrix* KV;
   matrix* KD_eta;
   matrix* KP_des_eta;
-  float kT_bar;
   float mass_kg;
   float mass_des_kg;
   matrix* J_kgm2;
@@ -77,5 +76,8 @@ void updateSE3Ctrl(SE3Controller *se3,
 void updateTiltPrioCtrl(TiltPrioCtrl *tltCtl, matrix* rotVel, quaternion q,
                                              matrix* rotVelDes, quaternion qDes,
                                              matrix* rotVelDotEst);
-void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* rotMat, matrix* eul_rad, matrix* omega_rps, matrix* eul_des_rad);
+void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* vel,
+                      matrix* rotMat, matrix* eul_rad,
+                      matrix* omega_rps, matrix* eul_des_rad,
+                      matrix* wrench_ext);
 #endif // CONTROLS_H_
