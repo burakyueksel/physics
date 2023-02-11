@@ -106,9 +106,9 @@ void initTiltPrioCtrl(TiltPrioCtrl *tiltCtrl)
 
 void initIDAPBCCtrl(IDAPBCCtrl *idapbc)
 {
-  // source 1: Conference paper: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
-  // source 2: Journal paper: https://journals.sagepub.com/doi/full/10.1177/0278364919835605
-  // source 3: Ch 4 of thesis https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
+  // source 1: Journal paper: https://journals.sagepub.com/doi/full/10.1177/0278364919835605
+  // source 2: Ch 4 of thesis https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
+  // source 3: Conference paper: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
 
   /*precompensation controller gains*/
   idapbc->KD_eta = newMatrix(3,3);
@@ -126,9 +126,6 @@ void initIDAPBCCtrl(IDAPBCCtrl *idapbc)
   setMatrixElement(idapbc->KP_des_eta,  2,  2,  kp_eta);
   setMatrixElement(idapbc->KP_des_eta,  3,  3,  kp_eta);
 
-  /*damping injection gains*/
-  idapbc->kT_bar = 1.0f;
-  idapbc->KR_bar = copyMatrix(idapbc->KD_eta);
   /*set the real mass*/
   idapbc->mass_kg = POINT_MASS_KG;
   /*set the desired mass*/
@@ -152,6 +149,26 @@ void initIDAPBCCtrl(IDAPBCCtrl *idapbc)
   /* inverse of the desired moment of inertia*/
   invertDiagonalMatrix(idapbc->J_des_kgm2, idapbc->J_des_inv_kgm2);
 
+  /*damping injection gains*/
+  // eq. 26 of [1]
+  idapbc->KV = newMatrix(4,4);
+  // KT
+  float kT_bar = 1.0f;
+  float kT = kT_bar*(idapbc->mass_kg*idapbc->mass_kg)/(idapbc->mass_des_kg*idapbc->mass_des_kg);
+  // KR
+  matrix* KR = newMatrix(3,3);
+  matrix* KR_bar = newMatrix(3,3);
+  productScalarMatrix(2, idapbc->KD_eta, KR_bar); // choose KR as 2*kd
+  matrix* KR_barMinusKDN = newMatrix(3,3);
+  subtractMatrix(KR_bar, returnProductMatrix(idapbc->KD_eta,idapbc->J_des_kgm2) , KR_barMinusKDN);
+  productMatrix(idapbc->J_des_inv_kgm2, returnProductMatrix(KR_barMinusKDN, idapbc->J_des_inv_kgm2), KR);
+  // set KV
+  setMatrixElement(idapbc->KV,1,1,kT);
+  setMatrixElement(idapbc->KV,2,2,ELEM(KR,1,1));
+  setMatrixElement(idapbc->KV,3,3,ELEM(KR,2,3));
+  setMatrixElement(idapbc->KV,4,4,ELEM(KR,3,3));
+
+  // ctrl outputs
   idapbc->ctrlThrust_N = newMatrix(1,1);   // Fz
   idapbc->ctrlMoments_Nm = newMatrix(3,1); // Mx, My, Mz
 }
@@ -504,7 +521,10 @@ void updateTiltPrioCtrl(TiltPrioCtrl *tiltCtrl, matrix* rotVel, quaternion q,
   deleteMatrix(qv_e_yaw);
 }
 
-void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* rotMat, matrix* eul_rad, matrix* omega_rps, matrix* eul_des_rad)
+void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* vel,
+                      matrix* rotMat, matrix* eul_rad,
+                      matrix* omega_rps, matrix* eul_des_rad,
+                      matrix* wrench_ext)
 {
   // source [1]: https://hal.laas.fr/hal-01964753/file/2019b-YueSecBueFra-preprint.pdf
   // source [2]: https://homepages.laas.fr/afranchi/robotics/sites/default/files/phd-thesis-2017-Yueksel.pdf
@@ -605,21 +625,19 @@ void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* rotMat, matrix* eul_rad, matri
       If you do the computations explicitly, you will find the following:
 
       r3_square = R31^2 + R32^2 + R33^2
-                  _                                  _
-                 |  -R31/r3_square    0     0     0   |
-                 |  -R32/r3_square    0     0     0   |
-      G_cross =  |  -R33/r3_square    0     0     0   |
-                 |      0             1     0     0   |
-                 |      0             0     1     0   |
-                 |_     0             0     0     1  _|
+                  _                                                                       _
+                 |  -R31/r3_square    -R32/r3_square     -R33/r3_square      0    0    0   |
+                 |          0                0                0              1    0    0   |
+      G_cross =  |          0                0                0              0    1    0   |
+                 |_         0                0                0              0    0    1  _|
    */
    float r3_square = ELEM(rotMat,3,1)*ELEM(rotMat,3,1) + ELEM(rotMat,3,2)*ELEM(rotMat,3,2) + ELEM(rotMat,3,3)*ELEM(rotMat,3,3);
    setMatrixElement(G_cross,1,1,-ELEM(rotMat,3,1)/r3_square);
-   setMatrixElement(G_cross,2,1,-ELEM(rotMat,3,2)/r3_square);
-   setMatrixElement(G_cross,3,1,-ELEM(rotMat,3,3)/r3_square);
-   setMatrixElement(G_cross,4,2, 1.0);
-   setMatrixElement(G_cross,5,3, 1.0);
-   setMatrixElement(G_cross,6,4, 1.0);
+   setMatrixElement(G_cross,1,2,-ELEM(rotMat,3,2)/r3_square);
+   setMatrixElement(G_cross,1,3,-ELEM(rotMat,3,3)/r3_square);
+   setMatrixElement(G_cross,2,4, 1.0);
+   setMatrixElement(G_cross,3,5, 1.0);
+   setMatrixElement(G_cross,4,6, 1.0);
    // u_es = G_cross * f_es, so f_es is the partial derivative terms of eq. (22), here written explicitly after hand computations.
    matrix* u_es = newMatrix(4,1);
    matrix* f_es = newMatrix(6,1);
@@ -663,6 +681,81 @@ void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* rotMat, matrix* eul_rad, matri
       In this part we control the dissipation behavior of the newly shaped physics using damping injection method.
    */
   // eq. (24) and the third line of eq. (29) of [1] show the damping injection control input u_di
+  /*
+    u_di = -Kv*G^T*M^-T*M_d^T*parder(Hd,p_bar)
+
+    Let's explain the parts of this term. Assuming that J_d is diagonal
+
+    parder(Hd,p_bar) = M_d^-1*p_bar = M_d^-1*M_d*M^-1*p = M^-1*p = q_dot (see [1] for the terminology. q_dot is the time derivative of the 6x1 states)
+
+    Kv = idapbc->KV (computed in the init fcn)
+
+    G^T*M^-T*M_d^T*q_dot = [-md/m*(R31*vx + R32*vy + R33*vz), Jd_x*roll_dot, Jd_y*pitch_dot, Jd_z*yaw_dot]^T
+
+    u_di = [kT*md/m*(R31*vx + R32*vy + R33*vz), -KR_x*Jd_x*roll_dot, -KR_y*Jd_y*pitch_dot, -KR_z*Jd_z*yaw_dot]^T
+
+  */
+  matrix* u_di = newMatrix(4,1);
+  setMatrixElement(u_di,1,1, (ELEM(idapbc->KV,1,1)*idapbc->mass_des_kg/idapbc->mass_kg) *
+                             (ELEM(rotMat,3,1)*ELEM(vel,1,1) + ELEM(rotMat,3,2)*ELEM(vel,2,1) + ELEM(rotMat,3,3)*ELEM(vel,3,1)));
+  setMatrixElement(u_di,2,1, -ELEM(idapbc->KV,2,2)*ELEM(idapbc->J_des_kgm2,1,1)*ELEM(eta_dot_rps,1,1));
+  setMatrixElement(u_di,3,1, -ELEM(idapbc->KV,3,3)*ELEM(idapbc->J_des_kgm2,2,2)*ELEM(eta_dot_rps,2,1));
+  setMatrixElement(u_di,4,1, -ELEM(idapbc->KV,4,4)*ELEM(idapbc->J_des_kgm2,3,3)*ELEM(eta_dot_rps,3,1));
+
+  /* 3. External Wrench Compensation
+     In step 1 and step 2 above we have computed the control inputs that changes the physical properties of the system from the original one
+     to a desired one. Once they are applied, system will behave differently.
+
+     In order to capture the correct reaction of the desired sytem to the external forces and torques (if they are measurable or estimated),
+     we apply the following control input.
+
+     For more details, see eq. (27) of [1].
+
+     In this implementation we assume the same things for G_cross and the desired moment of inertia is a diagonal matrix.
+     Consider w_ext = [f_ext_x, f_ext_y, f_ext_z, tau_ext_x, tau_ext_y, tau_ext_z]^T as the 6x1 external wrench.
+     In this case the long computation
+
+     u_w = G_cross * M*M_d^-1 * w_ext - G_cross*w_ext = (G_cross*M*M_d^-1 - G_cross)*w_ext
+
+     simplifies to:
+
+                 _                                                                         _
+                |  (f_ext_x * R31 + f_ext_y * R32 + f_ext_z * R33) * (1-m/m_d) / r3_square  |
+    u_w =       |                       tau_ext_x  * (J_d_xx^-1 - 1)                        |
+                |                       tau_ext_y  * (J_d_yy^-1 - 1)                        |
+                |_                      tau_ext_z  * (J_d_zz^-1 - 1)                       _|
+
+
+    with
+
+    r3_square = R31^2 + R32^2 + R33^2
+  */
+  matrix* u_w = newMatrix(4,1);
+  setMatrixElement(u_w,1,1, (ELEM(wrench_ext,1,1)*ELEM(rotMat,3,1) + ELEM(wrench_ext,2,1)*ELEM(rotMat,3,2) + ELEM(wrench_ext,3,1)*ELEM(rotMat,3,3))
+                             * (1-idapbc->mass_kg / idapbc->mass_des_kg) / r3_square);
+  setMatrixElement(u_w,2,1, ELEM(wrench_ext,4,1) * (ELEM(idapbc->J_des_inv_kgm2,1,1)-1));
+  setMatrixElement(u_w,3,1, ELEM(wrench_ext,5,1) * (ELEM(idapbc->J_des_inv_kgm2,2,2)-1));
+  setMatrixElement(u_w,4,1, ELEM(wrench_ext,6,1) * (ELEM(idapbc->J_des_inv_kgm2,3,3)-1));
+
+  /* Total energy shaping control inout for a desired physical behavior then becomes (see eq. 29 of [1]):
+    u_i = u_es + u_di + u_w
+  except the outer loop terms u_o that can be added here, e.g. for position control etc.
+  */
+  matrix* u_i = newMatrix(4,1);
+  sum3Matrix(u_es, u_di, u_w, u_i);
+
+  /* Output of the correct controller is the sum of the pre-compensating terms + u_i
+  */
+  matrix* u_pre = newMatrix(4,1);
+  matrix* u_idapbc = newMatrix(4,1);
+  // first element is thrust, where we do not do any precompensation (hence says zero). We did precompensation above for the rotational dynamics already.
+  setMatrixElement(u_pre,2,1, ELEM(u_r_precomp_Nm,1,1));
+  setMatrixElement(u_pre,3,1, ELEM(u_r_precomp_Nm,2,1));
+  setMatrixElement(u_pre,4,1, ELEM(u_r_precomp_Nm,3,1));
+  // u_idapbc = u_pre + u_i
+  sumMatrix(u_pre, u_i, u_idapbc);
+  // now set the outputs correctly
+  // To be completed
 }
 
 /*
