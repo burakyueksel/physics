@@ -658,15 +658,17 @@ void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* vel,
    setMatrixElement(f_es, 6, 1, ELEM(idapbc->J_des_inv_kgm2, 3, 3)* ELEM(idapbc->KP_des_eta,3, 3) * ELEM(eta_error, 3, 1));
    // compute u_es
    productMatrix(G_cross,f_es,u_es);
-
    /* Concluding remark for u_es:
    The explicit implementation shows that the choice of the desired energy functions (hence the physical behavior) affects the structure of the energy
    shaping controller dramatically. Having the desired Hamiltonian very similar to the original one (and hence in the class of standard mechanical systems)
    brings simplicity in implementation. Finally, u_es acts like a torsional spring, where its parameters are tuned for a desired moment of inertia behavior.
    More exoctic desired energy funcctions can be choosen for different goals, which would change u_es. In that case, go to [1] and [2] for the implicit
    computations of u_es, so that you can create your own explicit version of it before implementing for more efficient computation.
-
    */
+   // free memory
+   deleteMatrix(eta_error);
+   deleteMatrix(f_es);
+   deleteMatrix(G_cross);
 
    /* 2. Damping Injection.
       This part of the controller regulates the way system dissipates its energy (no more pure energy exchange).
@@ -755,7 +757,19 @@ void updateIDAPBCCtrl(IDAPBCCtrl *idapbc, matrix* vel,
   // u_idapbc = u_pre + u_i
   sumMatrix(u_pre, u_i, u_idapbc);
   // now set the outputs correctly
-  // To be completed
+  setMatrixElement(idapbc->ctrlThrust_N,1,1, ELEM(u_idapbc,1,1));
+  setMatrixElement(idapbc->ctrlMoments_Nm,1,1, ELEM(u_idapbc,2,1));
+  setMatrixElement(idapbc->ctrlMoments_Nm,2,1, ELEM(u_idapbc,3,1));
+  setMatrixElement(idapbc->ctrlMoments_Nm,3,1, ELEM(u_idapbc,4,1));
+
+  // free memory
+  deleteMatrix(u_r_precomp_Nm);
+  deleteMatrix(u_pre);
+  deleteMatrix(u_i);
+  deleteMatrix(u_idapbc);
+  deleteMatrix(u_es);
+  deleteMatrix(u_di);
+  deleteMatrix(u_w);
 }
 
 /*
