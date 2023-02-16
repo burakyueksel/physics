@@ -8,10 +8,12 @@
 #include "controls.h"
 #include "publish.h"
 #include "parameters.h"
+#include "planning.h"
 #include "physics.h"
 #include "sensors.h"
 #include <unistd.h> // for usleep function  
 #include <time.h> // for clock() fcn for measuring the clock ticks that have elapsed
+#include <stdlib.h> // for malloc fcns
 
 extern float g_time_s;
 clock_t start, end;
@@ -21,6 +23,40 @@ int main ()
 {
     // open a file to do the logging
     FILE* log_file = fopen("log.txt", "a");
+/*
+ * MOTION PLANNING
+*/
+///////////////
+    // Define start and goal positions
+    float xStart = 0.0;
+    float yStart = 0.0;
+    float xGoal = 10.0;
+    float yGoal = 10.0;
+
+    float xMax = 20.0;
+    float yMax = 20.0;
+
+    // Define step size
+    float stepSize = 0.5;
+
+    // Define maximum number of nodes to generate
+    int maxNodes = 10000;
+
+    // Define obstacles
+    int numObstacles = 1;
+    float** obstacles = (float**) malloc(numObstacles * sizeof(float*));
+    obstacles[0] = (float*) malloc(3 * sizeof(float));
+    obstacles[0][0] = 5.0;
+    obstacles[0][1] = 5.0;
+    obstacles[0][2] = 2.0;
+
+    // Run RRT algorithm
+    Node** nodes = RRT(xStart, yStart, xGoal, yGoal, xMax, yMax, stepSize, maxNodes, numObstacles, obstacles);
+
+    // Print the results
+    //printRRTResult(nodes, xGoal, yGoal, maxNodes, stepSize);
+
+///////////////
     // initiate phyiscs (parameters and the states)
     physicsInit();
     // states
