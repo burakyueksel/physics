@@ -11,5 +11,7 @@
 float newton_sqrt(float x);
 float randn();
 float signumf(float x);
+float minf(float x, float y);
+float maxf(float x, float y);
 
 #endif // MATHEMATICS_H_

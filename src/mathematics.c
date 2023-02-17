@@ -45,3 +45,17 @@ float signumf(float x)
     if (x>=1e-15) return 1;
     else return -1;
 }
+
+/** @brief min function. Returns min of 2 input values*/
+float minf(float x, float y)
+{
+    if (x < y) return x;
+    else return y;
+}
+
+/** @brief max function. Returns max of 2 input values*/
+float maxf(float x, float y)
+{
+    if (x > y) return x;
+    else return y;
+}

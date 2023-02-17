@@ -53,4 +53,16 @@
 #define CTRL_PID_KD         2.0 * CTRL_PID_OMEGA_RPS * CTRL_PID_DAMPING/ENV_GRAVITY_MPS2
 #define CTRL_PID_KI         CTRL_PID_KD
 
+// Motion Planning Parameters
+#define MOT_PLAN_NR_OF_OBSTACLES 1  // nr of obstacles in the map
+#define MOT_PLAN_GEOFENCE_X_MAX_M 20.0 // geofence limit in x axis
+#define MOT_PLAN_GEOFENCE_Y_MAX_M 20.0 // geofence limit in y axis
+#define MOT_PLAN_STEPSIZE_M 0.5 // step size used in search in rrt
+#define MOT_PLAN_START_X_M 0.0 //start location of serch in x axis
+#define MOT_PLAN_START_Y_M 0.0 // start location of sarch in y axis
+#define MOT_PLAN_GOAL_X_M 10.0 // target location of search in x axis
+#define MOT_PLAN_GOAL_Y_M 10.0 // target location of search in y axis
+#define MOT_PLAN_RRT_STEP_SIZE_M 0.5 // Define step size
+#define MOT_PLAN_RRT_MAXNODES 10000 // Define maximum number of nodes to generate
+
 #endif // PARAMETERS_H_

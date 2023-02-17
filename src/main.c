@@ -27,35 +27,17 @@ int main ()
  * MOTION PLANNING
 */
 ///////////////
-    // Define start and goal positions
-    float xStart = 0.0;
-    float yStart = 0.0;
-    float xGoal = 10.0;
-    float yGoal = 10.0;
-
-    float xMax = 20.0;
-    float yMax = 20.0;
-
-    // Define step size
-    float stepSize = 0.5;
-
-    // Define maximum number of nodes to generate
-    int maxNodes = 10000;
-
-    // Define obstacles
-    int numObstacles = 1;
-    float** obstacles = (float**) malloc(numObstacles * sizeof(float*));
-    obstacles[0] = (float*) malloc(3 * sizeof(float));
-    obstacles[0][0] = 5.0;
-    obstacles[0][1] = 5.0;
-    obstacles[0][2] = 2.0;
-
+    // Generate an obstacle
+    float** obstacles = generateSingleObstacle(5.0, 5.0, 2.0);
     // Run RRT algorithm
-    Node** nodes = RRT(xStart, yStart, xGoal, yGoal, xMax, yMax, stepSize, maxNodes, numObstacles, obstacles);
+    Node** nodes = RRT(MOT_PLAN_START_X_M, MOT_PLAN_START_Y_M,
+                      MOT_PLAN_GOAL_X_M, MOT_PLAN_GOAL_Y_M,
+                      MOT_PLAN_GEOFENCE_X_MAX_M, MOT_PLAN_GEOFENCE_Y_MAX_M,
+                      MOT_PLAN_RRT_STEP_SIZE_M, MOT_PLAN_RRT_MAXNODES,
+                      MOT_PLAN_NR_OF_OBSTACLES, obstacles);
 
     // Print the results
-    //printRRTResult(nodes, xGoal, yGoal, maxNodes, stepSize);
-
+    printRRTPath(nodes, MOT_PLAN_RRT_MAXNODES);
 ///////////////
     // initiate phyiscs (parameters and the states)
     physicsInit();
