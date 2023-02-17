@@ -15,6 +15,7 @@
 typedef struct Node {
     float x;
     float y;
+    int index;
     struct Node* parent;
 } Node;
 
@@ -27,7 +28,9 @@ typedef struct Node {
 float distNode(Node* n1, Node* n2);
 Node* getNearestNode(Node** nodes, int numNodes, Node* q);
 Node* generateRandomNode(float xMax, float yMax);
+float** generateSingleObstacle(float x_m, float y_m, float radius_m);
+float** generateRandomObstacles(int nrOfObstacles, float xMax, float yMax);
 Node** RRT(float xStart, float yStart, float xGoal, float yGoal, float xMax, float yMax, float stepSize, int maxNodes, int numObstacles, float** obstacles);
-void printRRTResult(Node** nodes, float xGoal, float yGoal, int maxNodes, float stepSize);
+void printRRTPath(Node** nodes, int numNodes);
 
 #endif // PLANNING_H_

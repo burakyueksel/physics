@@ -6,6 +6,8 @@
  **/
 
 #include "planning.h"
+#include "parameters.h"
+#include "mathematics.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -37,6 +39,7 @@ Node* getNearestNode(Node** nodes, int numNodes, Node* q)
         float d = distNode(nodes[i], q);
         if (d < minDist) {
             nearest = nodes[i];
+            nearest->index = i;
             minDist = d;
         }
     }
@@ -86,6 +89,48 @@ Node* generateRandomNode(float xMax, float yMax)
     return q;
 }
 
+/** @brief Generate an obstacle in 2D at desired position with desired radius
+ *  Note:  it generates a single obstacle
+ */
+float** generateSingleObstacle(float x_m, float y_m, float radius_m)
+{
+    // create free array for the obstacles
+    float** obstacles = (float**) malloc(1 * sizeof(float*));
+    // for each obstacle, we have 2 coordinates and 1 radii
+    obstacles[0] = (float*) malloc(3 * sizeof(float));
+    // set the obstacle data
+    obstacles[0][0] = x_m; // x pos
+    obstacles[0][1] = y_m; // y pos
+    obstacles[0][2] = radius_m; // radius
+
+    return obstacles;
+}
+
+/** @brief Generate an obstacle in 2D at desired position with desired radius
+ */
+float** generateRandomObstacles(int nrOfObstacles, float xMax, float yMax)
+{
+    // create free array for the obstacles
+    float** obstacles = (float**) malloc(nrOfObstacles * sizeof(float*));
+    /* what will be the radius of each obstacle? We compute that randomly too, but
+       in a way that it fits to the geofence reasonably. What we do:
+       1. get the minimum of the geofence dimensions
+       2. limit the maximum radius to the 10% of that number
+       This way we do not create obstacles with radius that are unreasonably huge
+    */
+    float maxRadius = 0.1 * minf(xMax,yMax);
+    for (int i = 0; i < nrOfObstacles; i++)
+    {
+        // for each obstacle, we have 2 coordinates and 1 radii
+        obstacles[i] = (float*) malloc(3 * sizeof(float));
+        // set the obstacle data
+        obstacles[i][0] = (float)rand() / (float)RAND_MAX * xMax; // random x position in geofence
+        obstacles[i][1] = (float)rand() / (float)RAND_MAX * yMax; // random y position in geofence
+        obstacles[i][2] = (float)rand() / (float)RAND_MAX * maxRadius; // random radius
+    }
+    return obstacles;
+}
+
 /** @brief RRT algorithm that runs in 2D
  */
 Node** RRT(float xStart, float yStart, float xGoal, float yGoal, float xMax, float yMax, float stepSize, int maxNodes, int numObstacles, float** obstacles)
@@ -94,11 +139,13 @@ Node** RRT(float xStart, float yStart, float xGoal, float yGoal, float xMax, flo
     Node* startNode = createNewNode();
     startNode->x = xStart;
     startNode->y = yStart;
+    startNode->index = 0;
     startNode->parent = NULL;
     // Create the goal node
     Node* goalNode = createNewNode();
     goalNode->x = xGoal;
     goalNode->y = yGoal;
+    goalNode->index = -1;
     goalNode->parent = NULL;
     
     // Allocate memory for nodes
@@ -130,9 +177,16 @@ Node** RRT(float xStart, float yStart, float xGoal, float yGoal, float xMax, flo
             nodes[numNodes] = newNode;
             // iterate the number of nodes
             numNodes++;
+            // update the new node index
+            newNode->index = numNodes;
             // Check if goal node is reached (latest new node is very close to the goal node)
-            if (distNode(newNode, goalNode) <= stepSize) {
+            if (distNode(newNode, goalNode) <= stepSize)
+            {
+                // update the goalNode's index
+                goalNode->index = numNodes;
+                // update the parent of the latest node with the goal node
                 newNode->parent = goalNode;
+                // finished. Return the nodes now
                 return nodes;
             }
         }
@@ -142,22 +196,43 @@ Node** RRT(float xStart, float yStart, float xGoal, float yGoal, float xMax, flo
 
 /** @brief Print function for the RRT path sarch result
  */
-void printRRTResult(Node** nodes, float xGoal, float yGoal, int maxNodes, float stepSize)
-{
-    // Print path if one is found
-    if (nodes != NULL) {
-        Node* goalNode = (Node*) malloc(sizeof(Node));
-        goalNode->x = xGoal;
-        goalNode->y = yGoal;
-        goalNode->parent = NULL;
-        Node* nearestGoal = getNearestNode(nodes, maxNodes, goalNode);
-        if (nearestGoal != NULL && distNode(nearestGoal, goalNode) <= stepSize) {
-            printf("Path found:\n");
-            //printPath(nearestGoal);
-        } else {
-            printf("No path found\n");
+void printRRTPath(Node** nodes, int numNodes) {
+    if (numNodes == 0) {
+        printf("No path found.\n");
+        return;
+    }
+
+    // Find goal node
+    Node* goalNode = nodes[numNodes - 1];
+    if (goalNode == NULL) {
+        printf("Error: Goal node is NULL.\n");
+        return;
+    }
+
+    // Traverse path from goal to start
+    Node* currNode = goalNode;
+    while (currNode != NULL) {
+        printf("(%f, %f)\n", currNode->x, currNode->y);
+        if (currNode->parent == NULL) {
+            break;
         }
-    } else {
-        printf("No path found\n");
+
+        // Find parent node
+        Node* parentNode = currNode->parent;
+        if (parentNode == NULL) {
+            printf("Error: Parent node is NULL.\n");
+            return;
+        }
+
+        // Find nearest node to parent
+        Node* nearestNode = getNearestNode(nodes, numNodes, parentNode);
+        int nearestIdx = nearestNode->index;
+        if (nearestIdx == -1) {
+            printf("Error: Nearest node not found.\n");
+            return;
+        }
+
+        // Update current node
+        currNode = nodes[nearestIdx];
     }
 }
