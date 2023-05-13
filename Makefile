@@ -5,7 +5,7 @@
 # Compiler and flags
 CC = gcc
 CFLAGS = -Wall -O2
-LDFLAGS= -lm
+LDFLAGS= -lm -ljson-c
 
 # Source files
 SRC_DIR = src

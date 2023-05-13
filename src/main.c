@@ -6,6 +6,7 @@
  **/
 
 #include "controls.h"
+#include "config.h"
 #include "publish.h"
 #include "parameters.h"
 #include "planning.h"
@@ -21,6 +22,13 @@ float cpu_time_used;
 
 int main ()
 {
+
+    // Generate header file from configs
+    generate_header_from_json("configs/quadrotor.json", "parameters/quadrotor_config.h", "QUADROTOR_CONFIG");
+    printf("Header file generated successfully!\n");
+    // break point
+    // return 0;
+
     // open a file to do the logging
     FILE* log_file = fopen("log.txt", "a");
 /*
