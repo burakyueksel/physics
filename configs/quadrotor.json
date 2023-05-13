@@ -1,0 +1,13 @@
+{
+    "mass": 0.5,
+    "inertia_xx": 0.005,
+    "inertia_yy": 0.005,
+    "inertia_zz": 0.01,
+    "arm_length": 0.2,
+    "propeller_thrust_constant": 1.0e-4,
+    "propeller_torque_constant": 1.0e-6,
+    "max_propeller_speed": 10000.0,
+    "max_thrust": 10.0,
+    "max_torque": 0.5
+  }
+  
