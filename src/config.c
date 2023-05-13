@@ -61,12 +61,6 @@ void generate_header_from_json_basic(const char* input_file, const char* output_
     free(json_str);
 }
 
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <json-c/json.h>
-
 void generate_header_from_json(const char* json_file, const char* header_file_name, const char* struct_name) {
     struct json_object *json;
     FILE* header_file = fopen(header_file_name, "w");
