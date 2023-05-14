@@ -12,12 +12,17 @@
 
 GNSSData ENU2LLA(float east, float north, float up, double lat0, double lon0, double alt0)
 {
+    // source [1]: https://gssc.esa.int/navipedia/index.php/Transformations_between_ECEF_and_ENU_coordinates
     GNSSData data;
 
     const double f = (WGS84_SMAA_M - WGS84_SMIA_M) / WGS84_SMAA_M; // flattening of the WGS84 ellipsoid
-    const double e2 = 2 * f - f * f; // eccentricity squared
+    const double e2 = 2 * f - f * f; // eccentricity squared of the ellipsoid
 
     // Convert the ENU positions to ECEF positions
+    /*
+    From ECEF to ENU, see the matrix in eq. (6) of [1].
+    From ENU to ECEF, see eq. (7) of [1].
+    */
     double sinlat0 = sin(lat0 * M_PI / 180.0);
     double coslat0 = cos(lat0 * M_PI / 180.0);
     double sinlon0 = sin(lon0 * M_PI / 180.0);
@@ -27,12 +32,24 @@ GNSSData ENU2LLA(float east, float north, float up, double lat0, double lon0, do
     double z = coslat0 * north + sinlat0 * up;
 
     // Compute the geocentric latitude, longitude, and altitude of the point (x, y, z)
+    /*
+    r = sqrt(x^2 + y^2 + z^2)
+    latgc = asin(z / r)
+    longc = atan2(y, x)
+    altgc = r - WGS84_SMAA_M / sqrt(1 - e^2 * sin^2(latgc))
+    */
     double r = sqrt(x * x + y * y + z * z);
     double latgc = asin(z / r);
     double longc = atan2(y, x);
     double altgc = r - WGS84_SMAA_M / sqrt(1 - e2 * sin(latgc) * sin(latgc));
 
     // Convert the geocentric latitude, longitude, and altitude to the corresponding WGS84 latitude, longitude, and altitude
+    /*
+    N = a / sqrt(1 - e^2 * sin^2(latgc))
+    lat = atan2(sin(latgc) * N + alt0, r * cos(latgc) + (1 - e^2) * N + alt0)
+    lon = atan2(sin(longc), cos(longc) * cos(latgc))
+    alt = r * cos(latgc) + altgc * sin(latgc) - N * (1 - e^2 * sin^2(latgc)) + alt0
+    */
     double sinlatgc = sin(latgc);
     double coslatgc = cos(latgc);
     double sinlongc = sin(longc);
