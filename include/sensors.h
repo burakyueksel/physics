@@ -28,9 +28,16 @@ typedef struct
   float gyroscope_z;
 } IMUData;
 
+typedef struct {
+    double latitude;
+    double longitude;
+    double altitude;
+    double speed;
+} GNSSData;
+
 BarometerData getBarometerReadings(float temperature, float true_altitude_m);
 IMUData getIMUReadings(float true_accelerometer_x, float true_accelerometer_y,
                                    float true_accelerometer_z, float true_gyroscope_x,
                                    float true_gyroscope_y, float true_gyroscope_z);
-
+GNSSData getGNSSReadings(double trueLatitude, double trueLongitude, double trueAltitude, double trueSpeed);
 #endif // SENSORS_H_
