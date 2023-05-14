@@ -10,6 +10,46 @@
 #include "sensors.h"
 #include <math.h>
 
+GNSSData ENU2LLA(float east, float north, float up, double lat0, double lon0, double alt0)
+{
+    GNSSData data;
+
+    const double f = (WGS84_SMAA_M - WGS84_SMIA_M) / WGS84_SMAA_M; // flattening of the WGS84 ellipsoid
+    const double e2 = 2 * f - f * f; // eccentricity squared
+
+    // Convert the ENU positions to ECEF positions
+    double sinlat0 = sin(lat0 * M_PI / 180.0);
+    double coslat0 = cos(lat0 * M_PI / 180.0);
+    double sinlon0 = sin(lon0 * M_PI / 180.0);
+    double coslon0 = cos(lon0 * M_PI / 180.0);
+    double x = -sinlon0 * east - coslon0 * sinlat0 * north + coslon0 * coslat0 * up;
+    double y = coslon0 * east - sinlon0 * sinlat0 * north + sinlon0 * coslat0 * up;
+    double z = coslat0 * north + sinlat0 * up;
+
+    // Compute the geocentric latitude, longitude, and altitude of the point (x, y, z)
+    double r = sqrt(x * x + y * y + z * z);
+    double latgc = asin(z / r);
+    double longc = atan2(y, x);
+    double altgc = r - WGS84_SMAA_M / sqrt(1 - e2 * sin(latgc) * sin(latgc));
+
+    // Convert the geocentric latitude, longitude, and altitude to the corresponding WGS84 latitude, longitude, and altitude
+    double sinlatgc = sin(latgc);
+    double coslatgc = cos(latgc);
+    double sinlongc = sin(longc);
+    double coslongc = cos(longc);
+    double N = WGS84_SMAA_M / sqrt(1 - e2 * sinlatgc * sinlatgc);
+
+    data.latitude   = atan2(sinlatgc * N + alt0, r * coslatgc + coslatgc * N * (1 - e2) + alt0);
+    data.longitude  = atan2(sinlongc, coslongc * coslatgc);
+    data.altitude = r * coslatgc + altgc * sinlatgc - N * (1 - e2 * (sinlatgc * sinlatgc)) + alt0;
+    // convert lat and lon to degrees
+    data.latitude *= 180.0 / M_PI; // Convert radians to degrees
+    data.latitude *= 180.0 / M_PI; // Convert radians to degrees
+    // Notice: data.vel_x, data.vel_y, data.vel_z are NOT set here.
+    return data;
+}
+
+
 float computeAltitude(float pressure, float temperature) {
     // Compute the altitude using the ideal gas law and the international standard atmosphere model
     float altitude = 0 + ((temperature + ENV_ZERO_CELCIUS) / ENV_L) * (pow((pressure / ENV_P0), (-1.0 * ENV_L * ENV_R / (ENV_AIR_MOLAR_MASS * ENV_GRAVITY_MPS2)))-1.0);
@@ -48,34 +88,36 @@ IMUData getIMUReadings(float true_accelerometer_x, float true_accelerometer_y,
   return measurement;
 }
 
-GNSSData getGNSSReadings(double trueLatitude, double trueLongitude, double trueAltitude, double trueSpeed)
+GNSSData getGNSSReadings(double lat0, double lon0, double alt0, float east, float north, float up, float trueSpeed_x, float trueSpeed_y, float trueSpeed_z)
 {
-  GNSSData gnss;
-    // Simulate GNSS data with random noise and error
-    // TODO: Replace this with the following:
-    /*
-    1- set initial coordinates as LLA
-    2- get current position from the physics
-    3- update the LLA with it.
-    4- Use that LLA then here as true LLA.
-    */
-    /*
-    double trueLatitude = 37.7749;
-    double trueLongitude = -122.4194;
-    double trueAltitude = 10.0;
-    double trueSpeed = 5.0;
-    */
+  GNSSData gnssIn;
+  GNSSData gnssOut;
+  // Simulate GNSS data with random noise and error
+  /*
+  double trueLatitude = 37.7749;
+  double trueLongitude = -122.4194;
+  double trueAltitude = 10.0;
+  double trueSpeed = 5.0;
+  */
 
-    // TODO: errors should come from datasheet. So from a parameter file.
-    double latitudeError = GNSS_LATTITUDE_BIAS_M + GNSS_LATTITUDE_1_SIGMA_ERROR_M * randn();
-    double longitudeError = GNSS_LONGTITUDE_BIAS_M + GNSS_LONGTITUDE_1_SIGMA_ERROR_M * randn();
-    double altitudeError = GNSS_ALTITUDE_BIAS_M + GNSS_ALTITUDE_1_SIGMA_ERROR_M * randn();
-    double speedError = GNSS_VELOCITY_BIAS_M + GNSS_VELOCITY_1_SIGMA_ERROR_M * randn();
+  // convert ENU positions to LLA and get the true LLA coordinates
+  gnssIn = ENU2LLA(east, north, up, lat0, lon0, alt0);
 
-    gnss.latitude = trueLatitude + latitudeError / ENV_RADIUS_OF_EARTH_M * (180 / M_PI);
-    gnss.longitude = trueLongitude + longitudeError / (ENV_RADIUS_OF_EARTH_M * cos(trueLatitude * M_PI / 180)) * (180 / M_PI);
-    gnss.altitude = trueAltitude + altitudeError;
-    gnss.speed = trueSpeed + speedError;
+  // compute bias and random 1 sigma error for the coordinates
+  double latitudeError = GNSS_LATTITUDE_BIAS_M + GNSS_LATTITUDE_1_SIGMA_ERROR_M * randn();
+  double longitudeError = GNSS_LONGTITUDE_BIAS_M + GNSS_LONGTITUDE_1_SIGMA_ERROR_M * randn();
+  double altitudeError = GNSS_ALTITUDE_BIAS_M + GNSS_ALTITUDE_1_SIGMA_ERROR_M * randn();
+  // compute bias and random 1 sigma error for the speeds
+  float speedError_x = GNSS_VELOCITY_BIAS_M + GNSS_VELOCITY_1_SIGMA_ERROR_M * randn();
+  float speedError_y =  GNSS_VELOCITY_BIAS_M + GNSS_VELOCITY_1_SIGMA_ERROR_M * randn();
+  float speedError_z =  GNSS_VELOCITY_BIAS_M + GNSS_VELOCITY_1_SIGMA_ERROR_M * randn();
+  // update the true values with this noise model
+  gnssOut.latitude = gnssIn.latitude + latitudeError / ENV_RADIUS_OF_EARTH_M * (180 / M_PI);
+  gnssOut.longitude = gnssIn.longitude + longitudeError / (ENV_RADIUS_OF_EARTH_M * cos(gnssIn.latitude * M_PI / 180)) * (180 / M_PI);
+  gnssOut.altitude = gnssIn.altitude + altitudeError;
+  gnssOut.vel_x = trueSpeed_x + speedError_x;
+  gnssOut.vel_y = trueSpeed_y + speedError_y;
+  gnssOut.vel_z = trueSpeed_z + speedError_z;
 
-    return gnss;
+  return gnssOut;
 }

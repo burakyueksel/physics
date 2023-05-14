@@ -76,4 +76,8 @@
 #define MOT_PLAN_RRT_STEP_SIZE_M 0.5 // Define step size
 #define MOT_PLAN_RRT_MAXNODES 10000 // Define maximum number of nodes to generate
 
+// Double precision parameters, beacause float precision would not be sufficient
+static const double WGS84_SMAA_M = 6378137.0; // semi-major axis of the WGS84 ellipsoid (in meters)
+static const double WGS84_SMIA_M = 6356752.3142; // semi-minor axis of the WGS84 ellipsoid (in meters)
+
 #endif // PARAMETERS_H_

@@ -7,7 +7,7 @@
  * @brief   Sensor libraries
  * @addtogroup SENSORS
  **/
-
+#include "vector.h"
 
 // Structure to store barometer data
 typedef struct
@@ -32,12 +32,14 @@ typedef struct {
     double latitude;
     double longitude;
     double altitude;
-    double speed;
+    float vel_x;
+    float vel_y;
+    float vel_z;
 } GNSSData;
 
 BarometerData getBarometerReadings(float temperature, float true_altitude_m);
 IMUData getIMUReadings(float true_accelerometer_x, float true_accelerometer_y,
                                    float true_accelerometer_z, float true_gyroscope_x,
                                    float true_gyroscope_y, float true_gyroscope_z);
-GNSSData getGNSSReadings(double trueLatitude, double trueLongitude, double trueAltitude, double trueSpeed);
+GNSSData getGNSSReadings(double lat0, double lon0, double alt0, float east, float north, float up, float trueSpeed_x, float trueSpeed_y, float trueSpeed_z);
 #endif // SENSORS_H_
