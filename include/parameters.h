@@ -76,10 +76,10 @@
 #define MOT_PLAN_RRT_STEP_SIZE_M 0.5 // Define step size
 #define MOT_PLAN_RRT_MAXNODES 10000 // Define maximum number of nodes to generate
 
-// Geographic Parameters
-#define GEO_INIT_LATITUDE_DEG   37.7749 // initial (start) location latitude coordinate in deg
-#define GEO_INIT_LONGITUDE_DEG  -122.4194 // initial (start) location longitude coordinate in deg
-#define GEO_INIT_ALTITUDE_M     10.0 // initial (start) altitude in meters
+// Geographic Parameters. Adding Tuebingen.
+static const double GEO_INIT_LATITUDE_DEG  = 9.047795; // initial (start) location latitude coordinate in deg
+static const double GEO_INIT_LONGITUDE_DEG = 48.5221921; // initial (start) location longitude coordinate in deg
+#define GEO_INIT_ALTITUDE_M     341.0 // initial (start) altitude in meters
 
 // Double precision parameters, beacause float precision would not be sufficient
 static const double WGS84_SMAA_M = 6378137.0; // semi-major axis of the WGS84 ellipsoid (in meters)
