@@ -49,6 +49,8 @@ int main ()
 ///////////////
     // initiate phyiscs (parameters and the states)
     physicsInit();
+    // initiate sensors
+    sensorsInit();
     // states
     states* realStates;
     // PID controller for the z position

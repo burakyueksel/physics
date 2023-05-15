@@ -76,8 +76,15 @@
 #define MOT_PLAN_RRT_STEP_SIZE_M 0.5 // Define step size
 #define MOT_PLAN_RRT_MAXNODES 10000 // Define maximum number of nodes to generate
 
+// Geographic Parameters
+#define GEO_INIT_LATITUDE_DEG   37.7749 // initial (start) location latitude coordinate in deg
+#define GEO_INIT_LONGITUDE_DEG  -122.4194 // initial (start) location longitude coordinate in deg
+#define GEO_INIT_ALTITUDE_M     10.0 // initial (start) altitude in meters
+
 // Double precision parameters, beacause float precision would not be sufficient
 static const double WGS84_SMAA_M = 6378137.0; // semi-major axis of the WGS84 ellipsoid (in meters)
 static const double WGS84_SMIA_M = 6356752.3142; // semi-minor axis of the WGS84 ellipsoid (in meters)
+static const double FLAT_WGS84 = (WGS84_SMAA_M - WGS84_SMIA_M) / WGS84_SMAA_M; // flattening of the WGS84 ellipsoid
+static const double ECCENTRICITY_2_WGS84 = 2 * FLAT_WGS84 - FLAT_WGS84 * FLAT_WGS84; // eccentricity squared of the ellipsoid
 
 #endif // PARAMETERS_H_

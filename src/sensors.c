@@ -10,13 +10,33 @@
 #include "sensors.h"
 #include <math.h>
 
+GNSSRefECEF g_gnssRefPointECEF;
+
+GNSSData LLA2ENU(float east, float north, float up, double lat, double lon, double alt, double lat0, double lon0, double alt0)
+{
+  GNSSData data;
+
+  // Convert target point to ECEF
+  const double N = WGS84_SMAA_M / sqrt(1 - ECCENTRICITY_2_WGS84 * sin(lat) * sin(lat));
+  const double x = (N + alt) * cos(lat) * cos(lon);
+  const double y = (N + alt) * cos(lat) * sin(lon);
+  const double z = (N * (1 - ECCENTRICITY_2_WGS84) + alt) * sin(lat);
+
+  // Compute ENU coordinates
+  const double dx = x - g_gnssRefPointECEF.pos_x_enu;
+  const double dy = y - g_gnssRefPointECEF.pos_y_enu;
+  const double dz = z - g_gnssRefPointECEF.pos_z_enu;
+  data.pos_y_enu = -sin(lon0) * dx + cos(lon0) * dy;
+  data.pos_x_enu = -sin(lat0) * cos(lon0) * dx - sin(lat0) * sin(lon0) * dy + cos(lat0) * dz;
+  data.pos_z_enu = cos(lat0) * cos(lon0) * dx + cos(lat0) * sin(lon0) * dy + sin(lat0) * dz;
+
+  return data;
+}
+
 GNSSData ENU2LLA(float east, float north, float up, double lat0, double lon0, double alt0)
 {
     // source [1]: https://gssc.esa.int/navipedia/index.php/Transformations_between_ECEF_and_ENU_coordinates
     GNSSData data;
-
-    const double f = (WGS84_SMAA_M - WGS84_SMIA_M) / WGS84_SMAA_M; // flattening of the WGS84 ellipsoid
-    const double e2 = 2 * f - f * f; // eccentricity squared of the ellipsoid
 
     // Convert the ENU positions to ECEF positions
     /*
@@ -41,7 +61,7 @@ GNSSData ENU2LLA(float east, float north, float up, double lat0, double lon0, do
     double r = sqrt(x * x + y * y + z * z);
     double latgc = asin(z / r);
     double longc = atan2(y, x);
-    double altgc = r - WGS84_SMAA_M / sqrt(1 - e2 * sin(latgc) * sin(latgc));
+    double altgc = r - WGS84_SMAA_M / sqrt(1 - ECCENTRICITY_2_WGS84 * sin(latgc) * sin(latgc));
 
     // Convert the geocentric latitude, longitude, and altitude to the corresponding WGS84 latitude, longitude, and altitude
     /*
@@ -54,11 +74,11 @@ GNSSData ENU2LLA(float east, float north, float up, double lat0, double lon0, do
     double coslatgc = cos(latgc);
     double sinlongc = sin(longc);
     double coslongc = cos(longc);
-    double N = WGS84_SMAA_M / sqrt(1 - e2 * sinlatgc * sinlatgc);
+    double N = WGS84_SMAA_M / sqrt(1 - ECCENTRICITY_2_WGS84 * sinlatgc * sinlatgc);
 
-    data.latitude   = atan2(sinlatgc * N + alt0, r * coslatgc + coslatgc * N * (1 - e2) + alt0);
+    data.latitude   = atan2(sinlatgc * N + alt0, r * coslatgc + coslatgc * N * (1 - ECCENTRICITY_2_WGS84) + alt0);
     data.longitude  = atan2(sinlongc, coslongc * coslatgc);
-    data.altitude = r * coslatgc + altgc * sinlatgc - N * (1 - e2 * (sinlatgc * sinlatgc)) + alt0;
+    data.altitude = r * coslatgc + altgc * sinlatgc - N * (1 - ECCENTRICITY_2_WGS84 * (sinlatgc * sinlatgc)) + alt0;
     // convert lat and lon to degrees
     data.latitude *= 180.0 / M_PI; // Convert radians to degrees
     data.latitude *= 180.0 / M_PI; // Convert radians to degrees
@@ -109,13 +129,6 @@ GNSSData getGNSSReadings(double lat0, double lon0, double alt0, float east, floa
 {
   GNSSData gnssIn;
   GNSSData gnssOut;
-  // Simulate GNSS data with random noise and error
-  /*
-  double trueLatitude = 37.7749;
-  double trueLongitude = -122.4194;
-  double trueAltitude = 10.0;
-  double trueSpeed = 5.0;
-  */
 
   // convert ENU positions to LLA and get the true LLA coordinates
   gnssIn = ENU2LLA(east, north, up, lat0, lon0, alt0);
@@ -132,9 +145,27 @@ GNSSData getGNSSReadings(double lat0, double lon0, double alt0, float east, floa
   gnssOut.latitude = gnssIn.latitude + latitudeError / ENV_RADIUS_OF_EARTH_M * (180 / M_PI);
   gnssOut.longitude = gnssIn.longitude + longitudeError / (ENV_RADIUS_OF_EARTH_M * cos(gnssIn.latitude * M_PI / 180)) * (180 / M_PI);
   gnssOut.altitude = gnssIn.altitude + altitudeError;
-  gnssOut.vel_x = trueSpeed_x + speedError_x;
-  gnssOut.vel_y = trueSpeed_y + speedError_y;
-  gnssOut.vel_z = trueSpeed_z + speedError_z;
+  gnssOut.vel_x_enu = trueSpeed_x + speedError_x;
+  gnssOut.vel_y_enu = trueSpeed_y + speedError_y;
+  gnssOut.vel_z_enu = trueSpeed_z + speedError_z;
 
   return gnssOut;
+}
+
+/** @brief Initialize GNSS coordinates with LLA */
+void gnssInit()
+{
+  // Convert reference point to ECEF
+  const double N0 = WGS84_SMAA_M / sqrt(1 - ECCENTRICITY_2_WGS84 * sin(GEO_INIT_LATITUDE_DEG) * sin(GEO_INIT_LATITUDE_DEG));
+  g_gnssRefPointECEF.pos_x_enu = (N0 + GEO_INIT_ALTITUDE_M) * cos(GEO_INIT_LATITUDE_DEG) * cos(GEO_INIT_LONGITUDE_DEG);
+  g_gnssRefPointECEF.pos_y_enu = (N0 + GEO_INIT_ALTITUDE_M) * cos(GEO_INIT_LATITUDE_DEG) * sin(GEO_INIT_LONGITUDE_DEG);
+  g_gnssRefPointECEF.pos_y_enu = (N0 * (1 - ECCENTRICITY_2_WGS84) + GEO_INIT_ALTITUDE_M) * sin(GEO_INIT_LATITUDE_DEG);
+}
+
+/** @brief Initialize Sensors */
+void sensorsInit()
+{
+  //imuInit();
+  //baroInit();
+  gnssInit();
 }
