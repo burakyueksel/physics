@@ -68,6 +68,15 @@ int main ()
         // Call barometer for the altitude
         BarometerData barometer = getBarometerReadings(ENV_TEMP_C, -realStates->trState.pos_Inertial_m[2]);
 
+        // Call gnss data for coordinates and speeds
+        float east = 0.0f;
+        float north = 0.0f;
+        float up   = 0.0f;
+        float speedx = 0.0f;
+        float speedy = 0.0f;
+        float speedz = 0.0f;
+
+        GNSSData gnss = getGNSSReadings(GEO_INIT_LATITUDE_DEG,GEO_INIT_LONGITUDE_DEG,GEO_INIT_ALTITUDE_M, east, north, up, speedx, speedy, speedz);
 
         float errZPos_m = setAltitude_m - barometer.altitude;
         // TODO: put controller time step here (but notice the usleep fcn below. Instead of usleep consider writing callback fcns)
@@ -96,6 +105,11 @@ int main ()
         printf("Temperature: %f C\n", barometer.temperature);
         printf("Pressure: %f Pa\n", barometer.pressure);
         printf("Altitude: %f m\n", barometer.altitude);
+
+        // GNSS test
+        printf("LAT: %f deg\n", gnss.latitude);
+        printf("LON: %f deg\n", gnss.longitude);
+        printf("ALT: %f m\n", gnss.altitude);
 
         /*print the time*/
         printf("Current time is:\n");
