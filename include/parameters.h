@@ -29,6 +29,7 @@
 #define ENV_T0  288.15 // Standard temperature at sea level (K)
 #define ENV_ZERO_CELCIUS 273.15 // Zero (0) Celcius in Kelvins (K)
 #define ENV_TEMP_C 20   // temperature of the air outside (C)
+#define ENV_AIR_DENSITY 1.225 // air density (kg/m^3)
 
 // Barometer parameters
 #define BARO_NOISE_SD 3.0  // standard deviation of noise (in Pa)
@@ -64,5 +65,19 @@
 #define MOT_PLAN_GOAL_Y_M 10.0 // target location of search in y axis
 #define MOT_PLAN_RRT_STEP_SIZE_M 0.5 // Define step size
 #define MOT_PLAN_RRT_MAXNODES 10000 // Define maximum number of nodes to generate
+
+// Fixed-wing parameters. TODO: move to .json config file
+#define S   20.0    // Wing area (m^2)
+#define CL0 0.2     // Coefficient of lift at zero angle of attack
+#define CLA 5.7     // Coefficient of lift slope (per radian)
+#define CD0 0.04    // Coefficient of drag at zero lift
+#define CDA 0.3     // Coefficient of drag slope (per radian)
+#define CYB 0.3     // Coefficient of side force slope (per radian)
+#define ClB 0.1     // Coefficient of rolling moment slope (per radian)
+#define ClP 0.4     // Coefficient of rolling moment due to roll rate
+#define CnB 0.1     // Coefficient of yawing moment slope (per radian)
+#define CnP 0.05    // Coefficient of yawing moment due to roll rate
+#define Cm0 0.1     // Coefficient of pitching moment at zero angle of attack
+#define CmA -0.08   // Coefficient of pitching moment slope (per radian)
 
 #endif // PARAMETERS_H_
