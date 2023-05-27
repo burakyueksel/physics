@@ -28,28 +28,31 @@ states g_phsicsPointStates;
 float g_time_s;
 
 
-/** @brief Function to calculate aerodynamic forces and moments*/
+/** @brief Function to calculate aerodynamic forces and moments.
+ * Control surfaces are excluded for now.
+ * Source: https://github.com/randybeard/uavbook
+*/
 
-void calculateAerodynamicForcesMoments(float airspeed_mps, float alpha_rad, float beta_rad, aeroForcesMoments* aeroForcesMoments)
+void calculateAerodynamicForcesMoments(float airspeed_mps, float alpha_rad, float beta_rad, float p_rps, float q_rps, float r_rps, aeroForcesMoments* aeroForcesMoments)
 {
     float aero_const = 0.5 * ENV_AIR_DENSITY * pow(airspeed_mps, 2) * S;
     // calculate lift
-    float cl = CL0  + CLA * alpha_rad;
+    float cl = CL0  + CLA * alpha_rad + CLQ * C0/(2*airspeed_mps)*q_rps;
     aeroForcesMoments->liftForce_N = aero_const * cl;
 
     // Calculate drag
-    double cd = CD0 + CDA * alpha_rad;
+    double cd = CD0 + CDA * alpha_rad + CDQ * C0/(2*airspeed_mps)*q_rps;
     aeroForcesMoments->dragForce_N = aero_const * cd;
+
+    // Calculate pitching moment
+    double cm = Cm0 + CmA * alpha_rad + CmQ * C0/(2*airspeed_mps)*q_rps;
+    aeroForcesMoments->pitchMoment_Nm= aero_const * cm;
 
     // Calculate side force
     aeroForcesMoments->sideForce_N = aero_const* CYB * beta_rad;
 
     // Calculate rolling moment
     aeroForcesMoments->rollMoment_Nm = aero_const* ClB * beta_rad + aero_const * ClP * 0.1;  // Assuming roll rate is 0.1 rad/s
-
-    // Calculate pitching moment
-    double cm = Cm0 + CmA * alpha_rad;
-    aeroForcesMoments->pitchMoment_Nm= aero_const * cm;
 
     // Calculate yawing moment
     aeroForcesMoments->yawMoment_Nm= aero_const * CnB * beta_rad + aero_const * CnP * 0.1;  // Assuming roll rate is 0.1 rad/s

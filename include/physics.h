@@ -50,7 +50,6 @@ typedef struct
   float yawMoment_Nm;
 } aeroForcesMoments;
 
-
 /*
 ********************************************
 ** GLOBALS
