@@ -37,27 +37,29 @@ void calculateAerodynamicForcesMoments(float airspeed_mps, float alpha_rad, floa
 {
     float aero_const = 0.5 * ENV_AIR_DENSITY * pow(airspeed_mps, 2) * S;
     // calculate lift
-    float cl = CL0  + CLA * alpha_rad + CLQ * C0/(2*airspeed_mps)*q_rps;
-    aeroForcesMoments->liftForce_N = aero_const * cl;
+    float cL = CL0  + CLA * alpha_rad + CLQ * C0/(2*airspeed_mps)*q_rps;
+    aeroForcesMoments->liftForce_N = aero_const * cL;
 
     // Calculate drag
-    double cd = CD0 + CDA * alpha_rad + CDQ * C0/(2*airspeed_mps)*q_rps;
-    aeroForcesMoments->dragForce_N = aero_const * cd;
+    float cD = CD0 + CDA * alpha_rad + CDQ * C0/(2*airspeed_mps)*q_rps;
+    aeroForcesMoments->dragForce_N = aero_const * cD;
 
     // Calculate pitching moment
-    double cm = Cm0 + CmA * alpha_rad + CmQ * C0/(2*airspeed_mps)*q_rps;
+    float cm = Cm0 + CmA * alpha_rad + CmQ * C0/(2*airspeed_mps)*q_rps;
     aeroForcesMoments->pitchMoment_Nm= aero_const * cm;
 
     // Calculate side force
-    aeroForcesMoments->sideForce_N = aero_const* CYB * beta_rad;
+    float cY = CY0 + CYB * beta_rad + CYP * B0 / (2*airspeed_mps)*p_rps +  CYR * B0 / (2*airspeed_mps)*r_rps;
+    aeroForcesMoments->sideForce_N = aero_const * cY;
 
     // Calculate rolling moment
-    aeroForcesMoments->rollMoment_Nm = aero_const* ClB * beta_rad + aero_const * ClP * 0.1;  // Assuming roll rate is 0.1 rad/s
+    float cl = Cl0 + ClB * beta_rad + ClP * B0 / (2*airspeed_mps)*p_rps +  ClR * B0 / (2*airspeed_mps)*r_rps;
+    aeroForcesMoments->rollMoment_Nm = aero_const* cl;
 
     // Calculate yawing moment
-    aeroForcesMoments->yawMoment_Nm= aero_const * CnB * beta_rad + aero_const * CnP * 0.1;  // Assuming roll rate is 0.1 rad/s
+    float cn = Cn0 + CnB * beta_rad + CnP * B0 / (2*airspeed_mps)*p_rps +  CnR * B0 / (2*airspeed_mps)*r_rps;
+    aeroForcesMoments->yawMoment_Nm= aero_const * cn;
 }
-
 
 
 /** @brief Convert quaternions to a 3x3 rotation matrix*/

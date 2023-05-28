@@ -69,19 +69,29 @@
 // Fixed-wing parameters. TODO: move to .json config file
 #define S   20.0    // Wing area (m^2)
 #define C0  2       // Mean chord of the wing (m)
+#define B0  4       // Wingspan of the aircraft
+// longitudinal
 #define CL0 0.2     // Coefficient of lift at zero angle of attack
 #define CLA 5.7     // Coefficient of lift slope (per radian)
 #define CLQ 0.1     // Coefficient of lift due to pitch rate
 #define CD0 0.04    // Coefficient of drag at zero lift
 #define CDA 0.3     // Coefficient of drag slope (per radian)
-#define CYB 0.3     // Coefficient of side force slope (per radian)
-#define ClB 0.1     // Coefficient of rolling moment slope (per radian)
-#define ClP 0.4     // Coefficient of rolling moment due to roll rate
-#define CdQ 0.1     // Coefficient of drag due to pitch rate
-#define CmQ 0.1     // Coefficient of pitching moment due to pi
-#define CnB 0.1     // Coefficient of yawing moment slope (per radian)
-#define CnP 0.05    // Coefficient of yawing moment due to roll rate
+#define CDQ 0.1     // Coefficient of drag due to pitch rate
 #define Cm0 0.1     // Coefficient of pitching moment at zero angle of attack
 #define CmA -0.08   // Coefficient of pitching moment slope (per radian)
+#define CmQ 0.1     // Coefficient of pitching moment due to pitch rate
+// lateral
+#define CY0 0.2     // Coefficient of side force at zero side slip angle
+#define CYB 0.3     // Coefficient of side force slope (per radian)
+#define CYP 0.05    // Coefficient of side force due to roll rate
+#define CYR 0.05    // Coefficient of side force due to yaq rate
+#define Cl0 0.1     // Coefficient of rolling moment at zero side slip angle
+#define ClB 0.1     // Coefficient of rolling moment slope (per radian)
+#define ClP 0.4     // Coefficient of rolling moment due to roll rate
+#define ClR 0.4     // Coefficient of rolling moment due to yaw rate
+#define Cn0 0.1     // Coefficient of yawing moment at zero side slip angle
+#define CnB 0.1     // Coefficient of yawing moment slope (per radian)
+#define CnP 0.05    // Coefficient of yawing moment due to roll rate
+#define CnR 0.05    // Coefficient of yawing moment due to yaq rate
 
 #endif // PARAMETERS_H_
