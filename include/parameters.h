@@ -21,6 +21,7 @@
 // Environment parameters
 // https://en.wikipedia.org/wiki/Standard_gravity
 // https://community.bosch-sensortec.com/t5/Question-and-answers/How-to-calculate-the-altitude-from-the-pressure-sensor-data/qaq-p/5702?lightbox-message-images-47339=11439i69B5F86B1DCF9625
+#define ENV_RADIUS_OF_EARTH_M 6371000
 #define ENV_GRAVITY_MPS2 9.80665f
 #define ENV_R 8.3144598   // universal gas constant for air (J/kg/K)
 #define ENV_L -0.0065  // temperature lapse rate (K/m) at P0 and T0
@@ -31,14 +32,24 @@
 #define ENV_TEMP_C 20   // temperature of the air outside (C)
 
 // Barometer parameters
-#define BARO_NOISE_SD 3.0  // standard deviation of noise (in Pa)
-#define BARO_BIAS 5.0 // bias of noise (in Pa)
+#define BARO_PRESSURE_BIAS_PA 5.0 // bias of noise (in Pa)
+#define BARO_PRESSURE_1_SIGMA_ERROR_PA 3.0  // standard deviation of noise (in Pa)
 
 // Parameters for the IMU sensor model
-#define BIAS_ACCELEROMETER 0.1  // m/s^2
-#define BIAS_GYROSCOPE 0.01     // rad/s
-#define NOISE_ACCELEROMETER 0.01  // m/s^2
-#define NOISE_GYROSCOPE 0.001     // rad/s
+#define IMU_ACCELEROMETER_BIAS_MPS2 0.1  // m/s^2
+#define IMU_GYROSCOPE_BIAS_RPS 0.01     // rad/s
+#define IMU_ACCELEROMETER_1_SIGMA_ERROR_MPS2 0.01  // m/s^2
+#define IMU_GYROSCOPE_1_SIGMA_ERROR_RPS 0.001     // rad/s
+
+// Parameters for GNSS sensor model
+#define GNSS_LATTITUDE_BIAS_M 0.0 // m
+#define GNSS_LATTITUDE_1_SIGMA_ERROR_M 1.0 // m. 1-sigma error of 1 meter
+#define GNSS_LONGTITUDE_BIAS_M 0.0 // m
+#define GNSS_LONGTITUDE_1_SIGMA_ERROR_M 1.0 // m. 1-sigma error of 1 meter
+#define GNSS_ALTITUDE_BIAS_M 0.0 // m
+#define GNSS_ALTITUDE_1_SIGMA_ERROR_M 0.5 // m. 1-sigma error of 0.5 meters
+#define GNSS_VELOCITY_BIAS_M 0.0 // m/s
+#define GNSS_VELOCITY_1_SIGMA_ERROR_M 0.1 // m/s. 1-sigma error of 0.1 m/s
 
 // Simulation parameters
 #define REALTIME_DT_S        0.001f   // discrete time step of the reality (simulated) in seconds
@@ -64,5 +75,16 @@
 #define MOT_PLAN_GOAL_Y_M 10.0 // target location of search in y axis
 #define MOT_PLAN_RRT_STEP_SIZE_M 0.5 // Define step size
 #define MOT_PLAN_RRT_MAXNODES 10000 // Define maximum number of nodes to generate
+
+// Geographic Parameters. Adding Tuebingen.
+static const double GEO_INIT_LATITUDE_DEG  = 9.047795; // initial (start) location latitude coordinate in deg
+static const double GEO_INIT_LONGITUDE_DEG = 48.5221921; // initial (start) location longitude coordinate in deg
+#define GEO_INIT_ALTITUDE_M     341.0 // initial (start) altitude in meters
+
+// Double precision parameters, beacause float precision would not be sufficient
+static const double WGS84_SMAA_M = 6378137.0; // semi-major axis of the WGS84 ellipsoid (in meters)
+static const double WGS84_SMIA_M = 6356752.3142; // semi-minor axis of the WGS84 ellipsoid (in meters)
+static const double FLAT_WGS84 = (WGS84_SMAA_M - WGS84_SMIA_M) / WGS84_SMAA_M; // flattening of the WGS84 ellipsoid
+static const double ECCENTRICITY_2_WGS84 = 2 * FLAT_WGS84 - FLAT_WGS84 * FLAT_WGS84; // eccentricity squared of the ellipsoid
 
 #endif // PARAMETERS_H_
