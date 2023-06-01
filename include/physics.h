@@ -40,6 +40,16 @@ typedef struct
   rotationalStates rtState;
 } states;
 
+typedef struct
+{
+  float liftForce_N;
+  float dragForce_N;
+  float sideForce_N;
+  float rollMoment_Nm;
+  float pitchMoment_Nm;
+  float yawMoment_Nm;
+} aeroForcesMoments;
+
 /*
 ********************************************
 ** GLOBALS
